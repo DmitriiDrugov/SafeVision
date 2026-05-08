@@ -13,5 +13,15 @@
     "id": "tc003",
     "nl_prompt": "Send a critical alert to all channels when three or more vehicles are standing in the emergency exit zone for more than 30 seconds.",
     "expected_yaml": "rule:\n  name: vehicles_blocking_emergency_exit\n  zone: emergency_exit\n  condition:\n    object: vehicle\n    action: standing\n    duration_seconds: 30\n    min_count: 3\n  action:\n    type: alert\n    severity: critical\n    channel: all\n  enabled: true\n"
+  },
+  {
+    "id": "tc004",
+    "nl_prompt": "Send an email alert when a worker without a safety vest is detected in the chemical storage area.",
+    "expected_yaml": "rule:\n  name: no_vest_chemical_storage\n  zone: chemical_storage\n  condition:\n    object: person\n    missing_ppe: vest\n  action:\n    type: alert\n    severity: high\n    channel: email\n  enabled: true\n"
+  },
+  {
+    "id": "tc005",
+    "nl_prompt": "Log a low-severity dashboard entry when a vehicle exits the loading dock.",
+    "expected_yaml": "rule:\n  name: vehicle_exiting_loading_dock\n  zone: loading_dock\n  condition:\n    object: vehicle\n    action: exiting\n  action:\n    type: log\n    severity: low\n    channel: dashboard\n  enabled: true\n"
   }
 ]

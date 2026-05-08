@@ -11,18 +11,26 @@ to ≥50 cases before shipping M6.
 ## Running
 
 ```bash
-# TODO: implement the harness
-python -m tests.llm_eval.run \
+# From repo root — requires OPENROUTER_API_KEY
+export OPENROUTER_API_KEY=<your-key>
+PYTHONPATH=shared/schemas:shared/proto python tests/llm-eval/run.py \
   --model meta-llama/llama-3.1-8b-instruct:free \
-  --cases tests/llm-eval/test_cases.json
+  --cases tests/llm-eval/test_cases.json \
+  --verbose
+
+# Dry-run (no API key needed — smoke-tests parsing logic only)
+PYTHONPATH=shared/schemas:shared/proto python tests/llm-eval/run.py --dry-run
+
+# Override threshold
+python tests/llm-eval/run.py --threshold 0.9
 ```
 
 ## CI Gate
 
-Nightly job runs the full eval. Fail CI if accuracy < 85%. Accuracy is defined
-as: the LLM-produced YAML is valid against the Pydantic Rule schema AND
-semantically equivalent to expected_yaml (object/zone/condition fields match;
-severity and channel match).
+Nightly workflow (`.github/workflows/llm-eval.yml`) runs the full eval at 03:00 UTC.
+Fails if accuracy < 85%. Accuracy is defined as: the LLM-produced YAML is valid
+against the Pydantic Rule schema AND semantically equivalent to expected_yaml
+(zone, condition.*, action.type/severity/channel must match; rule name is ignored).
 
 ## Adding Cases
 

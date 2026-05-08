@@ -1,0 +1,48 @@
+name: LLM Eval (nightly)
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # 03:00 UTC every night
+  workflow_dispatch:       # allow manual runs from the Actions UI
+    inputs:
+      model:
+        description: "OpenRouter model ID"
+        default: "meta-llama/llama-3.1-8b-instruct:free"
+        required: false
+      threshold:
+        description: "Minimum accuracy (0–1)"
+        default: "0.85"
+        required: false
+
+jobs:
+  llm-eval:
+    name: NL → YAML Rule Accuracy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install pydantic pyyaml
+
+      - name: Run eval harness
+        run: |
+          python tests/llm-eval/run.py \
+            --model "${{ github.event.inputs.model || 'meta-llama/llama-3.1-8b-instruct:free' }}" \
+            --cases tests/llm-eval/test_cases.json \
+            --threshold "${{ github.event.inputs.threshold || '0.85' }}" \
+            --verbose
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          PYTHONPATH: shared/schemas:shared/proto
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: llm-eval-results
+          path: tests/llm-eval/
+          retention-days: 30
