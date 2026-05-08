@@ -18,6 +18,7 @@ dependencies = [
     "opentelemetry-sdk>=1.23",
     "opentelemetry-exporter-otlp>=1.23",
     "watchdog>=4.0",
+    "PyJWT>=2.8",
     "safevision-schemas @ file://../../shared/schemas",
     "safevision-proto @ file://../../shared/proto",
 ]

@@ -20,10 +20,11 @@ from typing import Annotated, Any, AsyncIterator
 import redis.asyncio as aioredis
 import structlog
 import yaml
-from fastapi import APIRouter, FastAPI, HTTPException, Request, status
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from pydantic import BaseModel, ValidationError
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
-from fastapi.responses import Response
 
 from proto.detections import DetectionStreamEvent
 from proto.otel import setup_otel
@@ -31,6 +32,7 @@ from proto.violations import ViolationStreamEvent
 from schemas.event import ViolationEvent
 from schemas.rule import Rule
 
+from .auth import get_current_user
 from .evaluator import RuleEvaluator
 from .loader import RuleLoader
 from .state import RuleState
@@ -185,7 +187,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 # ── REST API ───────────────────────────────────────────────────────────────
 
-router = APIRouter(prefix="/api/v1")
+router = APIRouter(prefix="/api/v1", dependencies=[Depends(get_current_user)])
 
 
 class CreateRuleBody(BaseModel):
@@ -285,6 +287,14 @@ app = FastAPI(
     description="Evaluates declarative YAML rules + REST API for rule management",
     version="0.1.0",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(router)

@@ -284,6 +284,7 @@ services:
     environment:
       REDIS_URL: redis://redis:6379
       RULES_DIR: /etc/safevision/rules
+      SECRET_KEY: "${SECRET_KEY:-change-me-in-production}"
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
     volumes:
