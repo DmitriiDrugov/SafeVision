@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from shared.schemas.event import ViolationEvent
+from schemas.event import ViolationEvent
 
 STREAM_NAME = "events.violation"
 

@@ -1,8 +1,8 @@
-from shared.schemas.camera import Camera, Zone
-from shared.schemas.detection import BoundingBox, DetectionPayload, TrackedObject
-from shared.schemas.event import ViolationEvent
-from shared.schemas.incident import Incident, IncidentStatus
-from shared.schemas.rule import (
+from schemas.camera import Camera, Zone
+from schemas.detection import BoundingBox, DetectionPayload, TrackedObject
+from schemas.event import ViolationEvent
+from schemas.incident import Incident, IncidentStatus
+from schemas.rule import (
     ActionType,
     Channel,
     ObjectType,

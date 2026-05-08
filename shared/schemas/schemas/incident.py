@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from shared.schemas.rule import Severity
+from schemas.rule import Severity
 
 
 class IncidentStatus(str, Enum):

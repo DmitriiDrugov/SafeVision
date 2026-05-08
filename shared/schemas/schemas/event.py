@@ -3,8 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from shared.schemas.detection import DetectionPayload
-from shared.schemas.rule import Severity
+from schemas.detection import DetectionPayload
+from schemas.rule import Severity
 
 
 class ViolationEvent(BaseModel):
