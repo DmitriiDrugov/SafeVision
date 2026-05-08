@@ -2,6 +2,9 @@
 
 The MinIO SDK is synchronous; all blocking calls are wrapped with
 asyncio.get_event_loop().run_in_executor so the event loop is never blocked.
+
+Bucket lifecycle: clips under incidents/ expire after CLIP_RETENTION_DAYS
+(default 90) so storage does not grow unbounded.
 """
 from __future__ import annotations
 
@@ -17,6 +20,7 @@ from minio.error import S3Error
 logger = structlog.get_logger(__name__)
 
 _PRESIGN_EXPIRY = timedelta(days=7)
+_CLIP_RETENTION_DAYS = int(os.environ.get("CLIP_RETENTION_DAYS", "90"))
 
 
 class IncidentStorage:
@@ -45,6 +49,29 @@ class IncidentStorage:
         except S3Error as exc:
             self._log.error("storage.bucket_error", error=str(exc))
             raise
+        self._set_lifecycle_sync()
+
+    def _set_lifecycle_sync(self) -> None:
+        """Apply (or refresh) a lifecycle rule that expires clips after CLIP_RETENTION_DAYS."""
+        from minio.commonconfig import ENABLED, Filter
+        from minio.lifecycleconfig import Expiration, LifecycleConfig, Rule
+
+        config = LifecycleConfig(
+            [
+                Rule(
+                    ENABLED,
+                    rule_filter=Filter(prefix="incidents/"),
+                    rule_id="expire-clips",
+                    expiration=Expiration(days=_CLIP_RETENTION_DAYS),
+                )
+            ]
+        )
+        try:
+            self._client.set_bucket_lifecycle(self._bucket, config)
+            self._log.info("storage.lifecycle_set", expire_days=_CLIP_RETENTION_DAYS)
+        except S3Error as exc:
+            # Non-fatal — clips will still upload; operator can set lifecycle manually.
+            self._log.warning("storage.lifecycle_error", error=str(exc))
 
     async def upload_clip(
         self,

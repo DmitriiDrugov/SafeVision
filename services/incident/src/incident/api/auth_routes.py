@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
 from incident.auth import CurrentUser, UserInfo, authenticate_user, create_token
+from incident import ratelimit
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -23,12 +24,20 @@ class TokenResponse(BaseModel):
 
 @router.post("/login", response_model=TokenResponse)
 def login(body: LoginBody) -> TokenResponse:
+    if not ratelimit.is_allowed(body.username):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many failed login attempts. Try again later.",
+            headers={"Retry-After": "60"},
+        )
     user = authenticate_user(body.username, body.password)
     if user is None:
+        ratelimit.record_failure(body.username)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
         )
+    ratelimit.reset(body.username)
     token = create_token(user)
     return TokenResponse(
         access_token=token,

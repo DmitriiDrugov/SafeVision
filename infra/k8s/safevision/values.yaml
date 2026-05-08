@@ -161,6 +161,8 @@ incident:
       cpu: "1"
       memory: 512Mi
   frameArchiveDir: /data/frame-archive
+  # Evidence clips are deleted from MinIO after this many days (0 = never expire).
+  clipRetentionDays: 90
 
 # ── Notification Service ──────────────────────────────────────────────────────
 notification:

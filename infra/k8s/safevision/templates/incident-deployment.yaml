@@ -51,6 +51,8 @@ spec:
               value: {{ .Values.minio.bucket | quote }}
             - name: FRAME_ARCHIVE_DIR
               value: {{ .Values.incident.frameArchiveDir | quote }}
+            - name: CLIP_RETENTION_DAYS
+              value: {{ .Values.incident.clipRetentionDays | quote }}
             - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:
