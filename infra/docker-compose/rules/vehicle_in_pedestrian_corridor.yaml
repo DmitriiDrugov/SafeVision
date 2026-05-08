@@ -1,0 +1,10 @@
+rule:
+  name: vehicle_in_pedestrian_corridor
+  zone: pedestrian_corridor
+  condition:
+    object: vehicle
+  action:
+    type: alert
+    severity: critical
+    channel: all
+  enabled: true

@@ -1,0 +1,11 @@
+rule:
+  name: person_no_helmet_in_forklift_zone
+  zone: forklift_zone
+  condition:
+    object: person
+    missing_ppe: helmet
+  action:
+    type: alert
+    severity: high
+    channel: whatsapp
+  enabled: true

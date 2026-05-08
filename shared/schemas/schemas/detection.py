@@ -16,6 +16,7 @@ class TrackedObject(BaseModel):
     confidence: float = Field(..., ge=0.0, le=1.0)
     bbox: BoundingBox
     zone_ids: list[str] = Field(default_factory=list)
+    attributes: dict[str, str] = Field(default_factory=dict)
 
 
 class DetectionPayload(BaseModel):

@@ -202,6 +202,33 @@ services:
       loki:
         condition: service_healthy
 
+  # ─── M2: Rule Engine ─────────────────────────────────────────────────────
+  rule-engine:
+    build:
+      context: ../..
+      dockerfile: services/rule-engine/Dockerfile
+    restart: unless-stopped
+    environment:
+      REDIS_URL: redis://redis:6379
+      RULES_DIR: /etc/safevision/rules
+      METRICS_PORT: "8003"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+    volumes:
+      - ./rules:/etc/safevision/rules:ro
+    ports:
+      - "8003:8003"    # Prometheus metrics
+    networks:
+      - safevision_net
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import rule_engine; print('ok')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
   # ─── M1: Ingestion Service ────────────────────────────────────────────────
   ingestion:
     build:

@@ -1,54 +1,52 @@
+"""In-memory state for duration-based rule conditions.
+
+Stores the first-seen timestamp for each (rule_name, track_id, zone_id) triple.
+Single-consumer; no locking needed in the current architecture.
 """
-Rule Engine State — in-memory state for duration-based rule conditions.
+from __future__ import annotations
 
-TODO: Implement RuleState class:
+from datetime import datetime
 
-    class RuleState:
-        def __init__(self) -> None:
-            # _presence: dict[(rule_name, track_id, zone_id), first_seen_at]
-            ...
 
-        def record_presence(
-            self,
-            rule_name: str,
-            track_id: int,
-            zone_id: str,
-            ts: datetime,
-        ) -> None:
-            '''
-            Record that track_id is present in zone_id for rule_name at time ts.
-            If already recorded, keep the original first_seen_at (do not update).
-            '''
+class RuleState:
+    def __init__(self) -> None:
+        # key: (rule_name, track_id, zone_id)  value: first_seen_at
+        self._presence: dict[tuple[str, int, str], datetime] = {}
 
-        def get_presence_duration(
-            self,
-            rule_name: str,
-            track_id: int,
-            zone_id: str,
-            now: datetime,
-        ) -> float | None:
-            '''
-            Return seconds since first_seen_at, or None if no record exists.
-            '''
+    def record_presence(
+        self,
+        rule_name: str,
+        track_id: int,
+        zone_id: str,
+        ts: datetime,
+    ) -> None:
+        key = (rule_name, track_id, zone_id)
+        if key not in self._presence:
+            self._presence[key] = ts
 
-        def clear_absence(
-            self,
-            rule_name: str,
-            track_id: int,
-            zone_id: str,
-        ) -> None:
-            '''
-            Remove presence record. Called when object leaves zone.
-            '''
+    def get_presence_duration(
+        self,
+        rule_name: str,
+        track_id: int,
+        zone_id: str,
+        now: datetime,
+    ) -> float | None:
+        first_seen = self._presence.get((rule_name, track_id, zone_id))
+        if first_seen is None:
+            return None
+        return (now - first_seen).total_seconds()
 
-        def evict_stale(self, now: datetime, max_age_seconds: float = 300.0) -> None:
-            '''
-            Delete entries older than max_age_seconds.
-            Called periodically (e.g. every 60s) to prevent unbounded growth.
-            '''
+    def clear_absence(self, rule_name: str, track_id: int, zone_id: str) -> None:
+        self._presence.pop((rule_name, track_id, zone_id), None)
 
-Thread safety note:
-    RuleState is only accessed from the main event loop (single consumer).
-    No locking is required for the current single-consumer architecture.
-    If Rule Engine is scaled to multiple consumers, add threading.Lock here.
-"""
+    def evict_stale(self, now: datetime, max_age_seconds: float = 300.0) -> None:
+        stale = [
+            k
+            for k, first_seen in self._presence.items()
+            if (now - first_seen).total_seconds() > max_age_seconds
+        ]
+        for k in stale:
+            del self._presence[k]
+
+    def __len__(self) -> int:
+        return len(self._presence)

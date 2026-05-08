@@ -1,0 +1,12 @@
+rule:
+  name: crowding_zone_b
+  zone: zone_b
+  condition:
+    object: person
+    min_count: 3
+    duration_seconds: 10.0
+  action:
+    type: alert
+    severity: medium
+    channel: dashboard
+  enabled: true
