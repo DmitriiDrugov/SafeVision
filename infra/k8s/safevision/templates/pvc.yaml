@@ -1,0 +1,60 @@
+# Shared PersistentVolumeClaims used by multiple services.
+#
+# frame-archive: written by ingestion, read by incident (clip assembly).
+#   Requires ReadWriteMany if ingestion and incident run on different nodes.
+#   With k3s + local-path or single-node deployments, ReadWriteOnce suffices.
+#
+# models: YOLOv8 ONNX weights; populated once via `kubectl cp` or an init job.
+#
+# rules: YAML rule files; written by rule-engine API, persisted across restarts.
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "safevision.fullname" . }}-frame-archive
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.ingestion.frameArchiveStorageClass }}
+  storageClassName: {{ .Values.ingestion.frameArchiveStorageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.ingestion.frameArchiveSize }}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "safevision.fullname" . }}-models
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.inference.modelsStorageClass }}
+  storageClassName: {{ .Values.inference.modelsStorageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.inference.modelsStorageSize }}
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "safevision.fullname" . }}-rules
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.ruleEngine.rulesStorageClass }}
+  storageClassName: {{ .Values.ruleEngine.rulesStorageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.ruleEngine.rulesStorageSize }}

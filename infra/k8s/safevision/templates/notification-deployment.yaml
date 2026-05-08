@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "safevision.fullname" . }}-notification
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+    app.kubernetes.io/component: notification
+spec:
+  replicas: {{ .Values.notification.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "safevision.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: notification
+  template:
+    metadata:
+      labels:
+        {{- include "safevision.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: notification
+    spec:
+      containers:
+        - name: notification
+          image: {{ include "safevision.image" (dict "root" . "svc" .Values.notification) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8005
+              protocol: TCP
+            - name: metrics
+              containerPort: 8007
+              protocol: TCP
+          env:
+            - name: REDIS_URL
+              value: {{ include "safevision.redisUrl" . | quote }}
+            - name: N8N_WHATSAPP_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "safevision.fullname" . }}-secrets
+                  key: N8N_WHATSAPP_WEBHOOK_URL
+            - name: N8N_EMAIL_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "safevision.fullname" . }}-secrets
+                  key: N8N_EMAIL_WEBHOOK_URL
+            - name: METRICS_PORT
+              value: "8007"
+            - name: LOG_LEVEL
+              value: {{ .Values.global.logLevel | quote }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.global.otelEndpoint | quote }}
+          resources:
+            {{- toYaml .Values.notification.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "safevision.fullname" . }}-notification
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+    app.kubernetes.io/component: notification
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8005
+      targetPort: http
+      protocol: TCP
+    - name: metrics
+      port: 8007
+      targetPort: metrics
+      protocol: TCP
+  selector:
+    {{- include "safevision.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: notification

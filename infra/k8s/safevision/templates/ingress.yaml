@@ -1,0 +1,77 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "safevision.fullname" . }}
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host | quote }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          # Web UI (Next.js) — catch-all
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "safevision.fullname" . }}-web
+                port:
+                  name: http
+
+          # Incident service REST + WebSocket
+          - path: /api/v1/incidents
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "safevision.fullname" . }}-incident
+                port:
+                  name: http
+
+          # Incident auth endpoints
+          - path: /api/v1/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "safevision.fullname" . }}-incident
+                port:
+                  name: http
+
+          # Camera management
+          - path: /api/v1/cameras
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "safevision.fullname" . }}-incident
+                port:
+                  name: http
+
+          # Rule engine REST
+          - path: /api/v1/rules
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "safevision.fullname" . }}-rule-engine
+                port:
+                  name: http
+
+          # Notification WebSocket (incident live feed)
+          - path: /ws
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "safevision.fullname" . }}-notification
+                port:
+                  name: http
+{{- end }}

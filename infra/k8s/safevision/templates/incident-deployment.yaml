@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "safevision.fullname" . }}-incident
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+    app.kubernetes.io/component: incident
+spec:
+  replicas: {{ .Values.incident.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "safevision.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: incident
+  template:
+    metadata:
+      labels:
+        {{- include "safevision.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: incident
+    spec:
+      containers:
+        - name: incident
+          image: {{ include "safevision.image" (dict "root" . "svc" .Values.incident) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8004
+              protocol: TCP
+            - name: metrics
+              containerPort: 8006
+              protocol: TCP
+          env:
+            - name: DATABASE_URL
+              value: {{ include "safevision.databaseUrl" . | quote }}
+            - name: REDIS_URL
+              value: {{ include "safevision.redisUrl" . | quote }}
+            - name: MINIO_ENDPOINT
+              value: {{ include "safevision.minioEndpoint" . | quote }}
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "safevision.fullname" . }}-secrets
+                  key: MINIO_ACCESS_KEY
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "safevision.fullname" . }}-secrets
+                  key: MINIO_SECRET_KEY
+            - name: MINIO_USE_SSL
+              value: {{ .Values.minio.useSsl | quote }}
+            - name: MINIO_BUCKET_INCIDENTS
+              value: {{ .Values.minio.bucket | quote }}
+            - name: FRAME_ARCHIVE_DIR
+              value: {{ .Values.incident.frameArchiveDir | quote }}
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "safevision.fullname" . }}-secrets
+                  key: SECRET_KEY
+            - name: JWT_EXPIRE_HOURS
+              value: {{ .Values.auth.jwtExpireHours | quote }}
+            - name: AUTH_USERS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "safevision.fullname" . }}-secrets
+                  key: AUTH_USERS
+            - name: METRICS_PORT
+              value: "8006"
+            - name: LOG_LEVEL
+              value: {{ .Values.global.logLevel | quote }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.global.otelEndpoint | quote }}
+          volumeMounts:
+            - name: frame-archive
+              mountPath: {{ .Values.incident.frameArchiveDir }}
+              readOnly: true
+          resources:
+            {{- toYaml .Values.incident.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+      volumes:
+        - name: frame-archive
+          persistentVolumeClaim:
+            claimName: {{ include "safevision.fullname" . }}-frame-archive
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "safevision.fullname" . }}-incident
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+    app.kubernetes.io/component: incident
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8004
+      targetPort: http
+      protocol: TCP
+    - name: metrics
+      port: 8006
+      targetPort: metrics
+      protocol: TCP
+  selector:
+    {{- include "safevision.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: incident

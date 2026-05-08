@@ -1,0 +1,214 @@
+# SafeVision Helm chart — default values.
+# Override per environment via values.prod.yaml or --set flags.
+
+nameOverride: ""
+fullnameOverride: ""
+
+# ── Global settings ──────────────────────────────────────────────────────────
+global:
+  imageRegistry: ghcr.io/dmitriidrugov/safevision
+  imageTag: latest
+  imagePullPolicy: IfNotPresent
+  logLevel: INFO
+  # Set to your OpenTelemetry collector gRPC endpoint to enable tracing.
+  otelEndpoint: ""
+
+# ── Authentication ────────────────────────────────────────────────────────────
+auth:
+  # Long random string shared between incident and rule-engine services.
+  # Generate: python -c "import secrets; print(secrets.token_hex(32))"
+  secretKey: "change-me-generate-a-long-random-string"
+  # Comma-separated "username:password:role" entries.
+  authUsers: "admin:changeme:admin,operator1:changeme_op:operator"
+  jwtExpireHours: 24
+
+# ── PostgreSQL ────────────────────────────────────────────────────────────────
+postgres:
+  # true  → deploy an internal TimescaleDB StatefulSet
+  # false → provide an external connection URL via postgres.url
+  internal: true
+  image: timescale/timescaledb:latest-pg16
+  storageClass: ""        # "" uses the cluster default StorageClass
+  storageSize: 10Gi
+  database: safevision
+  username: safevision
+  password: changeme_postgres
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+  # Used only when internal: false
+  url: ""                 # postgresql+asyncpg://user:pass@host:5432/db
+
+# ── Redis ─────────────────────────────────────────────────────────────────────
+redis:
+  internal: true
+  image: redis:7-alpine
+  storageClass: ""
+  storageSize: 2Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  # Used only when internal: false
+  url: ""                 # redis://redis-host:6379
+
+# ── MinIO ─────────────────────────────────────────────────────────────────────
+minio:
+  internal: true
+  image: minio/minio:latest
+  storageClass: ""
+  storageSize: 20Gi
+  rootUser: minioadmin
+  rootPassword: changeme_minio
+  bucket: incidents
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  # Used only when internal: false
+  endpoint: ""            # host:port (no scheme)
+  accessKey: ""
+  secretKey: ""
+  useSsl: false
+
+# ── Ingestion Service ─────────────────────────────────────────────────────────
+ingestion:
+  replicaCount: 1
+  image:
+    repository: ingestion
+    tag: ""               # falls back to global.imageTag
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+  fpsTarget: "5.0"
+  # JSON array of Camera objects (id, name, rtsp_url, zones, enabled).
+  # Override per deployment with actual camera RTSP URLs.
+  cameraConfig: "[]"
+  frameArchiveDir: /data/frame-archive
+  frameArchiveStorageClass: ""
+  frameArchiveSize: 50Gi
+
+# ── Inference Service ─────────────────────────────────────────────────────────
+inference:
+  replicaCount: 1
+  image:
+    repository: inference
+    tag: ""
+  resources:
+    requests:
+      cpu: "2"
+      memory: 4Gi
+    limits:
+      cpu: "4"
+      memory: 8Gi
+  device: cpu             # "cpu" or "cuda"
+  modelPath: /models/yolov8n-ppe.onnx
+  modelsStorageClass: ""
+  modelsStorageSize: 5Gi
+  # GPU scheduling — set gpu.enabled: true when running on a GPU node.
+  gpu:
+    enabled: false
+    count: 1
+    nodeSelector:
+      nvidia.com/gpu: "true"
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+
+# ── Rule Engine ───────────────────────────────────────────────────────────────
+ruleEngine:
+  replicaCount: 1
+  image:
+    repository: rule-engine
+    tag: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  rulesDir: /etc/safevision/rules
+  rulesStorageClass: ""
+  rulesStorageSize: 1Gi
+
+# ── Incident Service ──────────────────────────────────────────────────────────
+incident:
+  replicaCount: 1
+  image:
+    repository: incident
+    tag: ""
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+  frameArchiveDir: /data/frame-archive
+
+# ── Notification Service ──────────────────────────────────────────────────────
+notification:
+  replicaCount: 1
+  image:
+    repository: notification
+    tag: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  n8nWhatsappWebhookUrl: ""
+  n8nEmailWebhookUrl: ""
+
+# ── Web / Config UI ───────────────────────────────────────────────────────────
+web:
+  replicaCount: 1
+  image:
+    repository: web
+    tag: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  openrouterApiKey: ""
+
+# ── Ingress ───────────────────────────────────────────────────────────────────
+ingress:
+  enabled: false
+  className: nginx
+  host: safevision.example.com
+  tls:
+    enabled: false
+    secretName: safevision-tls
+  annotations: {}
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+    # nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+
+# ── Prometheus monitoring ─────────────────────────────────────────────────────
+monitoring:
+  serviceMonitor:
+    enabled: false
+    namespace: monitoring   # namespace where Prometheus Operator is installed
+    interval: 30s
+    scrapeTimeout: 10s

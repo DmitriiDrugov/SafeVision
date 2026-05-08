@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "safevision.fullname" . }}-rule-engine
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+    app.kubernetes.io/component: rule-engine
+spec:
+  replicas: {{ .Values.ruleEngine.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "safevision.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: rule-engine
+  template:
+    metadata:
+      labels:
+        {{- include "safevision.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: rule-engine
+    spec:
+      containers:
+        - name: rule-engine
+          image: {{ include "safevision.image" (dict "root" . "svc" .Values.ruleEngine) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8003
+              protocol: TCP
+          env:
+            - name: REDIS_URL
+              value: {{ include "safevision.redisUrl" . | quote }}
+            - name: RULES_DIR
+              value: {{ .Values.ruleEngine.rulesDir | quote }}
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "safevision.fullname" . }}-secrets
+                  key: SECRET_KEY
+            - name: LOG_LEVEL
+              value: {{ .Values.global.logLevel | quote }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.global.otelEndpoint | quote }}
+          volumeMounts:
+            - name: rules
+              mountPath: {{ .Values.ruleEngine.rulesDir }}
+          resources:
+            {{- toYaml .Values.ruleEngine.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: rules
+          persistentVolumeClaim:
+            claimName: {{ include "safevision.fullname" . }}-rules
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "safevision.fullname" . }}-rule-engine
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+    app.kubernetes.io/component: rule-engine
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8003
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "safevision.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: rule-engine

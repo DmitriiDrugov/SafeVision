@@ -1,0 +1,92 @@
+# SafeVision — production value overrides.
+# Apply on top of values.yaml:
+#   helm upgrade --install safevision ./infra/k8s/safevision \
+#     -f infra/k8s/safevision/values.yaml \
+#     -f infra/k8s/safevision/values.prod.yaml \
+#     --set auth.secretKey=$SECRET_KEY \
+#     --set postgres.password=$POSTGRES_PASSWORD \
+#     --set minio.rootPassword=$MINIO_PASSWORD
+
+global:
+  imageTag: "0.1.0"       # pin to a specific release tag
+  imagePullPolicy: IfNotPresent
+  logLevel: WARNING
+
+# Production: use external managed Postgres (e.g. AWS RDS, Neon, Supabase).
+# Set postgres.internal: false and supply the full URL via --set or a Secret.
+postgres:
+  internal: false
+  url: ""                 # set via --set postgres.url=postgresql+asyncpg://...
+
+# Production: use external managed Redis (e.g. AWS ElastiCache, Upstash).
+redis:
+  internal: false
+  url: ""                 # set via --set redis.url=redis://...
+
+# Production: use external MinIO or S3-compatible storage.
+minio:
+  internal: false
+  endpoint: ""            # e.g. s3.amazonaws.com or your MinIO hostname
+  useSsl: true
+
+ingestion:
+  replicaCount: 1         # one per camera cluster node
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: "2"
+      memory: 1Gi
+
+inference:
+  replicaCount: 1
+  device: cuda
+  gpu:
+    enabled: true
+    count: 1
+    nodeSelector:
+      nvidia.com/gpu: "true"
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+  resources:
+    requests:
+      cpu: "4"
+      memory: 8Gi
+      nvidia.com/gpu: "1"
+    limits:
+      cpu: "8"
+      memory: 16Gi
+      nvidia.com/gpu: "1"
+
+ruleEngine:
+  replicaCount: 2
+
+incident:
+  replicaCount: 2
+
+notification:
+  replicaCount: 2
+
+web:
+  replicaCount: 2
+
+ingress:
+  enabled: true
+  className: nginx
+  host: safevision.yourdomain.com   # replace with real domain
+  tls:
+    enabled: true
+    secretName: safevision-tls
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+
+monitoring:
+  serviceMonitor:
+    enabled: true
+    namespace: monitoring
+    interval: 15s

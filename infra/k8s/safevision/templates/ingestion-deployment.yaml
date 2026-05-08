@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "safevision.fullname" . }}-ingestion
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingestion
+spec:
+  replicas: {{ .Values.ingestion.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "safevision.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ingestion
+  template:
+    metadata:
+      labels:
+        {{- include "safevision.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ingestion
+    spec:
+      containers:
+        - name: ingestion
+          image: {{ include "safevision.image" (dict "root" . "svc" .Values.ingestion) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: metrics
+              containerPort: 8001
+              protocol: TCP
+          env:
+            - name: REDIS_URL
+              value: {{ include "safevision.redisUrl" . | quote }}
+            - name: CAMERA_CONFIG
+              value: {{ .Values.ingestion.cameraConfig | quote }}
+            - name: METRICS_PORT
+              value: "8001"
+            - name: FPS_TARGET
+              value: {{ .Values.ingestion.fpsTarget | quote }}
+            - name: FRAME_ARCHIVE_DIR
+              value: {{ .Values.ingestion.frameArchiveDir | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.global.logLevel | quote }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.global.otelEndpoint | quote }}
+          volumeMounts:
+            - name: frame-archive
+              mountPath: {{ .Values.ingestion.frameArchiveDir }}
+          resources:
+            {{- toYaml .Values.ingestion.resources | nindent 12 }}
+          livenessProbe:
+            exec:
+              command: ["python", "-c", "import ingestion; print('ok')"]
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            failureThreshold: 3
+      volumes:
+        - name: frame-archive
+          persistentVolumeClaim:
+            claimName: {{ include "safevision.fullname" . }}-frame-archive
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "safevision.fullname" . }}-ingestion
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingestion
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 8001
+      targetPort: metrics
+      protocol: TCP
+  selector:
+    {{- include "safevision.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: ingestion

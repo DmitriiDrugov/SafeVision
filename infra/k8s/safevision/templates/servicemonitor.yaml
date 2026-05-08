@@ -1,0 +1,114 @@
+{{- if .Values.monitoring.serviceMonitor.enabled }}
+# Prometheus Operator ServiceMonitor — scrapes /metrics from all services.
+# Requires kube-prometheus-stack or prometheus-operator installed in the cluster.
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "safevision.fullname" . }}-ingestion
+  namespace: {{ .Values.monitoring.serviceMonitor.namespace }}
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "safevision.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ingestion
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+    - port: metrics
+      interval: {{ .Values.monitoring.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.monitoring.serviceMonitor.scrapeTimeout }}
+      path: /metrics
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "safevision.fullname" . }}-inference
+  namespace: {{ .Values.monitoring.serviceMonitor.namespace }}
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "safevision.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: inference
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+    - port: metrics
+      interval: {{ .Values.monitoring.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.monitoring.serviceMonitor.scrapeTimeout }}
+      path: /metrics
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "safevision.fullname" . }}-rule-engine
+  namespace: {{ .Values.monitoring.serviceMonitor.namespace }}
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "safevision.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: rule-engine
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+    - port: http
+      interval: {{ .Values.monitoring.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.monitoring.serviceMonitor.scrapeTimeout }}
+      path: /metrics
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "safevision.fullname" . }}-incident
+  namespace: {{ .Values.monitoring.serviceMonitor.namespace }}
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "safevision.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: incident
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+    - port: metrics
+      interval: {{ .Values.monitoring.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.monitoring.serviceMonitor.scrapeTimeout }}
+      path: /metrics
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "safevision.fullname" . }}-notification
+  namespace: {{ .Values.monitoring.serviceMonitor.namespace }}
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "safevision.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: notification
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+    - port: metrics
+      interval: {{ .Values.monitoring.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.monitoring.serviceMonitor.scrapeTimeout }}
+      path: /metrics
+{{- end }}

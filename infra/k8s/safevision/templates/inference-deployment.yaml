@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "safevision.fullname" . }}-inference
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+    app.kubernetes.io/component: inference
+spec:
+  replicas: {{ .Values.inference.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "safevision.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: inference
+  template:
+    metadata:
+      labels:
+        {{- include "safevision.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: inference
+    spec:
+      {{- if .Values.inference.gpu.enabled }}
+      nodeSelector:
+        {{- toYaml .Values.inference.gpu.nodeSelector | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.inference.gpu.tolerations | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: inference
+          image: {{ include "safevision.image" (dict "root" . "svc" .Values.inference) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: metrics
+              containerPort: 8002
+              protocol: TCP
+          env:
+            - name: REDIS_URL
+              value: {{ include "safevision.redisUrl" . | quote }}
+            - name: MODEL_PATH
+              value: {{ .Values.inference.modelPath | quote }}
+            - name: DEVICE
+              value: {{ .Values.inference.device | quote }}
+            - name: METRICS_PORT
+              value: "8002"
+            - name: LOG_LEVEL
+              value: {{ .Values.global.logLevel | quote }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ .Values.global.otelEndpoint | quote }}
+          volumeMounts:
+            - name: models
+              mountPath: /models
+              readOnly: true
+          resources:
+            {{- toYaml .Values.inference.resources | nindent 12 }}
+          readinessProbe:
+            exec:
+              command: ["python", "-c", "import inference; print('ok')"]
+            initialDelaySeconds: 30
+            periodSeconds: 15
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: {{ include "safevision.fullname" . }}-models
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "safevision.fullname" . }}-inference
+  labels:
+    {{- include "safevision.labels" . | nindent 4 }}
+    app.kubernetes.io/component: inference
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 8002
+      targetPort: metrics
+      protocol: TCP
+  selector:
+    {{- include "safevision.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: inference

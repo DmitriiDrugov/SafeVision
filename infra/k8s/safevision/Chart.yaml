@@ -1,0 +1,16 @@
+apiVersion: v2
+name: safevision
+description: SafeVision — AI-powered industrial safety monitoring platform
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - safety
+  - computer-vision
+  - industrial
+  - ppe
+home: https://github.com/dmitriidrugov/safevision
+sources:
+  - https://github.com/dmitriidrugov/safevision
+maintainers:
+  - name: SafeVision Team
