@@ -1,0 +1,125 @@
+groups:
+  - name: safevision.pipeline
+    interval: 30s
+    rules:
+
+      # ── Service availability ────────────────────────────────────────────
+
+      - alert: SafeVisionIngestionDown
+        expr: absent(up{job="ingestion"} == 1)
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Ingestion service is down"
+          description: "No ingestion instance has been up for more than 2 minutes."
+
+      - alert: SafeVisionInferenceDown
+        expr: absent(up{job="inference"} == 1)
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Inference service is down"
+          description: "No inference instance has been up for more than 2 minutes."
+
+      - alert: SafeVisionRuleEngineDown
+        expr: absent(up{job="rule-engine"} == 1)
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Rule Engine service is down"
+          description: "No rule-engine instance has been up for more than 2 minutes."
+
+      - alert: SafeVisionIncidentDown
+        expr: absent(up{job="incident"} == 1)
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Incident service is down"
+          description: "No incident instance has been up for more than 2 minutes."
+
+      - alert: SafeVisionNotificationDown
+        expr: absent(up{job="notification"} == 1)
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Notification service is down"
+          description: "No notification instance has been up for more than 2 minutes."
+
+      # ── Stream health ────────────────────────────────────────────────────
+
+      - alert: SafeVisionNoFramesIngested
+        expr: |
+          sum(rate(ingestion_frames_published_total[5m])) == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No frames being ingested"
+          description: "Zero frames published to Redis in the last 5 minutes — check camera connections."
+
+      - alert: SafeVisionStreamReconnectLoop
+        expr: |
+          rate(ingestion_stream_reconnects_total[5m]) > 0.5
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Camera stream reconnecting frequently"
+          description: "Camera {{ $labels.camera_id }} is reconnecting more than once every 2 seconds."
+
+      - alert: SafeVisionHighInferenceLatency
+        expr: |
+          histogram_quantile(0.95, sum(rate(inference_latency_seconds_bucket[5m])) by (le)) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Inference p95 latency > 500 ms"
+          description: "95th percentile inference latency has exceeded 500 ms for 5 minutes."
+
+      # ── Violation & incident rates ────────────────────────────────────────
+
+      - alert: SafeVisionHighViolationRate
+        expr: |
+          sum(rate(rule_engine_violations_total[5m])) * 60 > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Violation rate > 100 per minute"
+          description: "More than 100 violations per minute are being generated — possible false-positive rule."
+
+      - alert: SafeVisionCriticalViolationSpike
+        expr: |
+          sum(rate(rule_engine_violations_total{severity="critical"}[1m])) * 60 > 10
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical violations spiking"
+          description: "More than 10 critical violations per minute — immediate attention required."
+
+      # ── Notification DLQ ────────────────────────────────────────────────
+
+      - alert: SafeVisionDLQHigh
+        expr: notification_dlq_depth > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Notification DLQ has {{ $value }} events"
+          description: "The notification dead-letter queue depth has exceeded 10 for 5 minutes — check n8n webhook connectivity."
+
+      - alert: SafeVisionDLQCritical
+        expr: notification_dlq_depth > 100
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Notification DLQ critically deep ({{ $value }} events)"
+          description: "More than 100 events are stuck in the dead-letter queue."

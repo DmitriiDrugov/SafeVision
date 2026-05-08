@@ -25,9 +25,10 @@ from typing import AsyncIterator
 import redis.asyncio as aioredis
 import structlog
 from fastapi import FastAPI
-from prometheus_client import start_http_server
+from prometheus_client import Counter, start_http_server
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from proto.otel import setup_otel
 from proto.violations import ViolationStreamEvent
 from schemas.event import ViolationEvent
 
@@ -50,6 +51,12 @@ structlog.configure(
 )
 
 logger = structlog.get_logger(__name__)
+
+_incidents_created = Counter(
+    "incident_created_total",
+    "Total incidents created from violation events",
+    ["severity"],
+)
 
 _STREAM_INPUT = "events.violation"
 _CONSUMER_GROUP = "incident-cg"
@@ -114,6 +121,9 @@ async def _stream_consumer(
                         payload = IncidentOut.model_validate(incident_row).model_dump_json()
                         await ws_manager.broadcast(payload)
 
+                        _incidents_created.labels(
+                            severity=stream_event.payload.severity.value
+                        ).inc()
                         logger.info(
                             "incident.created",
                             id=incident_row.id,
@@ -141,6 +151,7 @@ async def _stream_consumer(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    setup_otel("safevision-incident")
     database_url = os.environ.get(
         "DATABASE_URL", "postgresql+asyncpg://safevision:changeme@postgres:5432/safevision"
     )

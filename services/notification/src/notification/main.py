@@ -26,8 +26,9 @@ import httpx
 import redis.asyncio as aioredis
 import structlog
 from fastapi import FastAPI
-from prometheus_client import start_http_server
+from prometheus_client import Gauge, start_http_server
 
+from proto.otel import setup_otel
 from proto.violations import ViolationStreamEvent
 
 from .api.routes import router
@@ -49,6 +50,8 @@ structlog.configure(
 )
 
 logger = structlog.get_logger(__name__)
+
+_dlq_depth = Gauge("notification_dlq_depth", "Current number of events in the dead-letter queue")
 
 _STREAM_INPUT = "events.violation"
 _CONSUMER_GROUP = "notification-cg"
@@ -148,6 +151,7 @@ async def _dlq_retry_loop(
         try:
             await asyncio.sleep(_DLQ_RETRY_INTERVAL)
             count = await redis_client.llen("notifications.dlq")
+            _dlq_depth.set(count)
             if count == 0:
                 continue
             logger.info("dlq.retrying", count=count)
@@ -173,6 +177,7 @@ async def _dlq_retry_loop(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    setup_otel("safevision-notification")
     redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379")
     metrics_port = int(os.environ.get("METRICS_PORT", "8007"))
 

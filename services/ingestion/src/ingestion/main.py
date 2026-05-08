@@ -17,6 +17,7 @@ import redis.asyncio as aioredis
 import structlog
 from prometheus_client import start_http_server
 
+from proto.otel import setup_otel
 from schemas.camera import Camera
 
 from .frame_publisher import FramePublisher
@@ -46,6 +47,7 @@ def _load_cameras() -> list[Camera]:
 
 
 async def _main() -> None:
+    setup_otel("safevision-ingestion")
     cameras = _load_cameras()
     redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379")
     metrics_port = int(os.environ.get("METRICS_PORT", "8001"))

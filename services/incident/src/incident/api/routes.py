@@ -6,6 +6,7 @@ from typing import Annotated, Any
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, WebSocket, WebSocketDisconnect, status
+from prometheus_client import Counter
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +14,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from incident.db.models import AuditLogModel, IncidentModel
 
 logger = structlog.get_logger(__name__)
+
+_incident_acked = Counter(
+    "incident_acknowledged_total",
+    "Total incidents acknowledged",
+    ["severity"],
+)
+_incident_resolved = Counter(
+    "incident_resolved_total",
+    "Total incidents resolved",
+    ["severity"],
+)
+_incident_fp = Counter(
+    "incident_false_positive_total",
+    "Total incidents marked as false positive",
+    ["severity"],
+)
 
 router = APIRouter(prefix="/incidents", tags=["incidents"])
 
@@ -135,6 +152,7 @@ async def acknowledge_incident(
     await _write_audit(db, incident_id, body.actor, "acknowledge", body.note, before, "acknowledged")
     await db.commit()
     await db.refresh(row)
+    _incident_acked.labels(severity=row.severity).inc()
     return IncidentOut.model_validate(row)
 
 
@@ -154,6 +172,7 @@ async def resolve_incident(
     await _write_audit(db, incident_id, body.actor, "resolve", body.note, before, "resolved")
     await db.commit()
     await db.refresh(row)
+    _incident_resolved.labels(severity=row.severity).inc()
     return IncidentOut.model_validate(row)
 
 
@@ -172,6 +191,7 @@ async def mark_false_positive(
     await _write_audit(db, incident_id, body.actor, "false_positive", body.note, before, "false_positive")
     await db.commit()
     await db.refresh(row)
+    _incident_fp.labels(severity=row.severity).inc()
     return IncidentOut.model_validate(row)
 
 

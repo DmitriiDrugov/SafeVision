@@ -18,9 +18,10 @@ from multiprocessing.shared_memory import SharedMemory
 import numpy as np
 import redis.asyncio as aioredis
 import structlog
-from prometheus_client import start_http_server
+from prometheus_client import Counter, Gauge, start_http_server
 
 from proto.detections import DetectionStreamEvent
+from proto.otel import setup_otel
 from proto.frames import FrameEvent
 from schemas.detection import DetectionPayload
 
@@ -41,6 +42,17 @@ structlog.configure(
 )
 
 logger = structlog.get_logger(__name__)
+
+_frames_processed = Counter(
+    "inference_frames_processed_total",
+    "Total frames consumed and processed from the frames.raw stream",
+    ["camera_id"],
+)
+_active_tracks = Gauge(
+    "inference_active_tracks",
+    "Number of currently tracked objects per camera",
+    ["camera_id"],
+)
 
 _STREAM_INPUT = "frames.raw"
 _CONSUMER_GROUP = "inference-cg"
@@ -87,6 +99,7 @@ async def _ensure_consumer_group(redis_client: aioredis.Redis) -> None:
 
 
 async def _main() -> None:
+    setup_otel("safevision-inference")
     model_path = os.environ.get("MODEL_PATH", "/models/yolov8n-ppe.onnx")
     device = os.environ.get("DEVICE", "cpu")
     redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379")
@@ -169,6 +182,10 @@ async def _main() -> None:
                     await publisher.publish(detection_event, shm_name)
                     shm_name = None  # publisher already unlinked it
 
+                    _frames_processed.labels(camera_id=frame_event.camera_id).inc()
+                    _active_tracks.labels(camera_id=frame_event.camera_id).set(
+                        len(tracked)
+                    )
                     _print_detections(frame_event, payload)
 
                 except Exception as exc:

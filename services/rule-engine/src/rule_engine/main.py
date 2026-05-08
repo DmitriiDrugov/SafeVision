@@ -26,6 +26,7 @@ from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from fastapi.responses import Response
 
 from proto.detections import DetectionStreamEvent
+from proto.otel import setup_otel
 from proto.violations import ViolationStreamEvent
 from schemas.event import ViolationEvent
 from schemas.rule import Rule
@@ -139,6 +140,7 @@ def _log_violation(v: ViolationEvent) -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    setup_otel("safevision-rule-engine")
     rules_dir = Path(os.environ.get("RULES_DIR", "/etc/safevision/rules"))
     redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379")
 
