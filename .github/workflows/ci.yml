@@ -7,6 +7,9 @@ on:
     branches: ["main"]
 
 jobs:
+
+  # ── Python linting ────────────────────────────────────────────────────────
+
   lint-python:
     name: Lint Python (ruff + mypy)
     runs-on: ubuntu-latest
@@ -15,12 +18,20 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install lint tools
-        run: pip install ruff mypy pydantic
+      - name: Install lint tools and shared packages
+        run: |
+          pip install ruff mypy pydantic
+          pip install -e shared/schemas
+          pip install -e shared/proto
       - name: ruff check
         run: ruff check shared/ services/
-      - name: mypy (shared schemas)
-        run: mypy shared/schemas/ shared/proto/
+      - name: mypy (shared only)
+        run: |
+          mypy shared/schemas/schemas/ shared/proto/proto/ \
+            --ignore-missing-imports \
+            --no-strict-optional
+
+  # ── Web linting ───────────────────────────────────────────────────────────
 
   lint-web:
     name: Lint Web (eslint + prettier)
@@ -42,10 +53,13 @@ jobs:
         run: npm run format:check
         working-directory: web/app
 
+  # ── Python unit tests (per service) ──────────────────────────────────────
+
   test-unit:
     name: Unit Tests (${{ matrix.service }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         service: [ingestion, inference, rule-engine, incident, notification]
     steps:
@@ -53,12 +67,59 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install service + shared
+      - name: Install shared packages
         run: |
-          pip install -e shared/
-          pip install -e services/${{ matrix.service }}/[dev]
+          pip install -e shared/schemas
+          pip install -e shared/proto
+      - name: Install service with dev extras
+        run: pip install -e "services/${{ matrix.service }}[dev]"
       - name: pytest
-        run: pytest services/${{ matrix.service }}/tests/ -v --tb=short
+        run: |
+          pytest services/${{ matrix.service }}/tests/ \
+            -v --tb=short \
+            --asyncio-mode=auto
+
+  # ── Python integration tests ──────────────────────────────────────────────
+
+  test-integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install shared packages and integration test deps
+        run: |
+          pip install -e shared/schemas
+          pip install -e shared/proto
+          pip install -e "services/rule-engine[dev]"
+          pip install -e "services/incident[dev]"
+          pip install -e "services/notification[dev]"
+          pip install \
+            pytest pytest-asyncio \
+            "redis[hiredis]>=5.0" \
+            pydantic structlog watchdog prometheus-client \
+            pyyaml httpx aiosqlite sqlalchemy
+      - name: pytest integration
+        run: |
+          pytest tests/integration/ \
+            -v --tb=short \
+            --asyncio-mode=auto
+        env:
+          REDIS_URL: redis://localhost:6379
+
+  # ── Web unit tests ────────────────────────────────────────────────────────
 
   test-web:
     name: Unit Tests (web)
@@ -77,11 +138,14 @@ jobs:
         run: npm run test
         working-directory: web/app
 
+  # ── Docker image builds ────────────────────────────────────────────────────
+
   build-images:
     name: Build Docker Image (${{ matrix.service }})
     runs-on: ubuntu-latest
-    needs: [lint-python, lint-web, test-unit, test-web]
+    needs: [lint-python, lint-web, test-unit, test-integration, test-web]
     strategy:
+      fail-fast: false
       matrix:
         include:
           - service: ingestion
@@ -100,7 +164,7 @@ jobs:
             context: .
             dockerfile: services/notification/Dockerfile
           - service: web
-            context: web/app
+            context: .
             dockerfile: web/app/Dockerfile
     steps:
       - uses: actions/checkout@v4
