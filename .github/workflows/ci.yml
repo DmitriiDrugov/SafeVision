@@ -118,6 +118,7 @@ jobs:
             --asyncio-mode=auto
         env:
           REDIS_URL: redis://localhost:6379
+          SECRET_KEY: ci-integration-test-secret-key
 
   # ── Web unit tests ────────────────────────────────────────────────────────
 

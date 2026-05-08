@@ -9,7 +9,8 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from incident.auth import get_current_user
-from pydantic import BaseModel, ConfigDict, Field
+from incident.crypto import decrypt_url, encrypt_url
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -58,6 +59,11 @@ class CameraOut(BaseModel):
     enabled: bool
     zones: list[dict[str, Any]]
 
+    @field_validator("rtsp_url", mode="before")
+    @classmethod
+    def _decrypt_rtsp_url(cls, v: str) -> str:
+        return decrypt_url(v)
+
 
 # ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -66,11 +72,11 @@ async def _get_session(request: Request) -> AsyncSession:
 
 
 async def _publish_camera_config(redis_client: aioredis.Redis, db: AsyncSession) -> None:
-    """Write current camera list to Redis so Inference can load zone config."""
+    """Write current camera list to Redis with decrypted RTSP URLs for ingestion/inference."""
     result = await db.execute(select(CameraModel).where(CameraModel.enabled == True))  # noqa: E712
     cameras = result.scalars().all()
     payload = [
-        {"id": c.id, "name": c.name, "rtsp_url": c.rtsp_url, "zones": c.zones}
+        {"id": c.id, "name": c.name, "rtsp_url": decrypt_url(c.rtsp_url), "zones": c.zones}
         for c in cameras
     ]
     await redis_client.set(_CAMERA_CONFIG_KEY, json.dumps(payload))
@@ -95,7 +101,7 @@ async def create_camera(body: CameraIn, request: Request) -> CameraModel:
         row = CameraModel(
             id=body.id,
             name=body.name,
-            rtsp_url=body.rtsp_url,
+            rtsp_url=encrypt_url(body.rtsp_url),
             enabled=body.enabled,
             zones=[z.model_dump() for z in body.zones],
         )
@@ -129,7 +135,7 @@ async def update_camera(camera_id: str, body: CameraUpdate, request: Request) ->
         if body.name is not None:
             row.name = body.name
         if body.rtsp_url is not None:
-            row.rtsp_url = body.rtsp_url
+            row.rtsp_url = encrypt_url(body.rtsp_url)
         if body.enabled is not None:
             row.enabled = body.enabled
         if body.zones is not None:

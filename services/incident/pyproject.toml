@@ -21,6 +21,7 @@ dependencies = [
     "opentelemetry-exporter-otlp>=1.23",
     "pydantic>=2.0",
     "pydantic-settings>=2.0",
+    "cryptography>=41.0",
     "PyJWT>=2.8",
     "passlib[bcrypt]>=1.7",
     "safevision-schemas @ file://../../shared/schemas",
