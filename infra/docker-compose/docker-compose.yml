@@ -202,6 +202,34 @@ services:
       loki:
         condition: service_healthy
 
+  # ─── M4: Notification Service ────────────────────────────────────────────
+  notification:
+    build:
+      context: ../..
+      dockerfile: services/notification/Dockerfile
+    restart: unless-stopped
+    environment:
+      REDIS_URL: redis://redis:6379
+      # Configure n8n webhook URLs after setting up workflows in n8n UI:
+      N8N_WHATSAPP_WEBHOOK_URL: "${N8N_WHATSAPP_WEBHOOK_URL:-}"
+      N8N_EMAIL_WEBHOOK_URL: "${N8N_EMAIL_WEBHOOK_URL:-}"
+      METRICS_PORT: "8007"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+    ports:
+      - "8005:8005"    # FastAPI
+      - "8007:8007"    # Prometheus metrics
+    networks:
+      - safevision_net
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8005/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
   # ─── M3: Incident Service ────────────────────────────────────────────────
   incident:
     build:

@@ -182,6 +182,7 @@ class RuleEvaluator:
             camera_id=event.payload.camera_id,
             zone_id=zone_id,
             severity=rule.action.severity,
+            channel=rule.action.channel,
             detected_at=ts,
             detection_payload=event.payload,
             trace_id=event.trace_id,
