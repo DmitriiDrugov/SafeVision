@@ -88,7 +88,7 @@ def _violation_to_incident(v: ViolationEvent) -> IncidentModel:
         zone_id=v.zone_id,
         severity=v.severity.value,
         status="open",
-        detection_payload=v.detection_payload.model_dump(),
+        detection_payload=v.detection_payload.model_dump(mode="json"),
         detected_at=v.detected_at,
     )
 
