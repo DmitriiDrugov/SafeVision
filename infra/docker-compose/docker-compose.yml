@@ -302,6 +302,26 @@ services:
       retries: 3
       start_period: 10s
 
+  # ─── MediaMTX — RTSP / RTMP / HLS server for dev/test streams ───────────
+  # Provides a local RTSP endpoint so ingestion can run without real cameras.
+  # Push a test pattern: ffmpeg -re -f lavfi -i testsrc=size=1280x720:rate=25 \
+  #   -c:v libx264 -preset ultrafast -f rtsp rtsp://localhost:8554/cam01
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    restart: unless-stopped
+    ports:
+      - "8554:8554"    # RTSP
+      - "8888:8888"    # HLS
+      - "8889:8889"    # WebRTC
+    networks:
+      - safevision_net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:9997/v3/paths/list || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
   # ─── M1: Ingestion Service ────────────────────────────────────────────────
   ingestion:
     build:

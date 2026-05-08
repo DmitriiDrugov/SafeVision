@@ -138,12 +138,50 @@ jobs:
         run: npm run test
         working-directory: web/app
 
+  # ── Playwright E2E tests ──────────────────────────────────────────────────
+
+  test-e2e:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: web/app/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+        working-directory: web/app
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+        working-directory: web/app
+      - name: Build Next.js app
+        run: npm run build
+        working-directory: web/app
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8004
+          NEXT_PUBLIC_RULES_API_URL: http://localhost:8003
+          NEXT_PUBLIC_WS_URL: ws://localhost:8005/ws/incidents
+      - name: Run Playwright tests
+        run: npm run test:e2e
+        working-directory: web/app
+        env:
+          CI: "true"
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: web/app/playwright-report/
+          retention-days: 7
+
   # ── Docker image builds ────────────────────────────────────────────────────
 
   build-images:
     name: Build Docker Image (${{ matrix.service }})
     runs-on: ubuntu-latest
-    needs: [lint-python, lint-web, test-unit, test-integration, test-web]
+    needs: [lint-python, lint-web, test-unit, test-integration, test-web, test-e2e]
     strategy:
       fail-fast: false
       matrix:
