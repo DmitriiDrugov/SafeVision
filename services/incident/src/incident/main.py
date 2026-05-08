@@ -25,6 +25,7 @@ from typing import AsyncIterator
 import redis.asyncio as aioredis
 import structlog
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import Counter, start_http_server
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -32,6 +33,7 @@ from proto.otel import setup_otel
 from proto.violations import ViolationStreamEvent
 from schemas.event import ViolationEvent
 
+from .api.auth_routes import router as auth_router
 from .api.camera_routes import router as camera_router
 from .api.routes import ConnectionManager, IncidentOut, router
 from .clip_assembler import ClipAssembler
@@ -240,6 +242,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # tighten to specific origins per deployment
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(auth_router, prefix="/api/v1")
 app.include_router(router, prefix="/api/v1")
 app.include_router(camera_router, prefix="/api/v1")
 

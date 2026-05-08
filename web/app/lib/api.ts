@@ -1,5 +1,17 @@
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8004'
+
+// Imported lazily to avoid circular deps and SSR issues
+function _authHeaders(): HeadersInit {
+  if (typeof window === 'undefined') return {}
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { authHeaders } = require('./auth') as typeof import('./auth')
+    return authHeaders()
+  } catch {
+    return {}
+  }
+}
 export const RULES_API_BASE =
   process.env.NEXT_PUBLIC_RULES_API_URL ?? 'http://localhost:8003'
 
@@ -133,7 +145,11 @@ async function apiFetch<T>(
   init?: RequestInit,
 ): Promise<T> {
   const res = await fetch(`${base}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ..._authHeaders(),
+      ...init?.headers,
+    },
     ...init,
   })
   if (!res.ok) {

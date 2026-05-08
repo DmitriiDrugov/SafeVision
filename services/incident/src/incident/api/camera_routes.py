@@ -6,7 +6,9 @@ from typing import Any
 
 import redis.asyncio as aioredis
 import structlog
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+
+from incident.auth import get_current_user
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,7 +17,11 @@ from incident.db.models import CameraModel
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/cameras", tags=["cameras"])
+router = APIRouter(
+    prefix="/cameras",
+    tags=["cameras"],
+    dependencies=[Depends(get_current_user)],
+)
 
 _CAMERA_CONFIG_KEY = "safevision:cameras"
 

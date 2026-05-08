@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from incident.auth import get_current_user
 from incident.db.models import AuditLogModel, IncidentModel
 
 logger = structlog.get_logger(__name__)
@@ -31,7 +32,11 @@ _incident_fp = Counter(
     ["severity"],
 )
 
-router = APIRouter(prefix="/incidents", tags=["incidents"])
+router = APIRouter(
+    prefix="/incidents",
+    tags=["incidents"],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 # ── Response models ───────────────────────────────────────────────────────
