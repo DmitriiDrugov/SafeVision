@@ -126,19 +126,56 @@ queries become slow.
 
 ## Camera Management
 
+Camera configuration is managed through the Incident Service REST API and stored
+in the database. Changes are published to the `safevision:cameras` Redis key and
+picked up by the Ingestion service within `CAMERA_POLL_INTERVAL_SECS` (default
+30 s) — **no restart required**.
+
 ### Adding a camera
 
-1. Update `CAMERA_CONFIG` env var on the Ingestion container (JSON array):
-   ```json
-   [
-     {"id": "cam01", "name": "Line A", "rtsp_url": "rtsp://...", "zones": [], "enabled": true},
-     {"id": "cam02", "name": "Line B", "rtsp_url": "rtsp://...", "zones": [], "enabled": true}
-   ]
-   ```
-2. Restart the Ingestion service. The Rule Engine and Inference services pick up
-   the new camera automatically (they consume from the same Redis streams).
-3. Define zones via the `/configure` UI or the Rule Engine API. Zone polygons use
-   normalised coordinates `[0, 1]` in the camera frame (`[0,0]` = top-left).
+```bash
+curl -X POST http://localhost:8004/api/v1/cameras \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "cam02",
+    "name": "Line B",
+    "rtsp_url": "rtsp://192.168.10.101:554/stream1",
+    "enabled": true,
+    "zones": []
+  }'
+```
+
+The RTSP URL is encrypted at rest. The response returns the decrypted URL.
+Within 30 s the Ingestion service starts consuming frames from the new camera.
+
+### Updating a camera or changing its RTSP URL
+
+```bash
+curl -X PUT http://localhost:8004/api/v1/cameras/cam02 \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"rtsp_url": "rtsp://192.168.10.101:554/stream2"}'
+```
+
+The Ingestion service detects the URL change and restarts only that camera's
+reader task — other cameras are unaffected.
+
+### Disabling a camera
+
+```bash
+curl -X PUT http://localhost:8004/api/v1/cameras/cam02 \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"enabled": false}'
+```
+
+### Removing a camera
+
+```bash
+curl -X DELETE http://localhost:8004/api/v1/cameras/cam02 \
+  -H "Authorization: Bearer <token>"
+```
 
 ### Testing RTSP connectivity
 
@@ -147,13 +184,6 @@ queries become slow.
 docker exec -it safevision-ingestion-1 \
   ffprobe -v error -show_streams rtsp://<camera-ip>/stream
 ```
-
-### Removing a camera cleanly
-
-1. Set `"enabled": false` on the camera in `CAMERA_CONFIG`.
-2. Restart Ingestion. No new frames are published; existing frames are consumed
-   by Inference within seconds.
-3. Remove the camera entry from the config entirely and restart again.
 
 ### Zone coordinate system
 
@@ -165,6 +195,26 @@ Example — a zone covering the lower-left quarter:
 ```json
 {"id": "loading_dock", "name": "Loading Dock", "polygon": [[0,0.5],[0.5,0.5],[0.5,1],[0,1]]}
 ```
+
+## n8n Notification Workflows
+
+See **[docs/N8N-WORKFLOWS.md](N8N-WORKFLOWS.md)** for the full setup guide
+including workflow import, credential configuration, variable definitions, and
+end-to-end testing.
+
+Pre-built importable workflows:
+- `infra/n8n/workflows/safevision-whatsapp-alerts.json` — Twilio WhatsApp
+- `infra/n8n/workflows/safevision-email-alerts.json` — SMTP email
+
+Quick start after workflow import:
+
+1. Activate each workflow in n8n and copy the Production Webhook URL.
+2. Set the URLs in `.env`:
+   ```
+   N8N_WHATSAPP_WEBHOOK_URL=https://n8n-host/webhook/safevision-whatsapp
+   N8N_EMAIL_WEBHOOK_URL=https://n8n-host/webhook/safevision-email
+   ```
+3. `docker compose restart notification`
 
 ## Incident Response Playbook
 

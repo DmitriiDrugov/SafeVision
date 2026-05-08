@@ -1,0 +1,208 @@
+{
+  "name": "SafeVision — WhatsApp Alerts",
+  "nodes": [
+    {
+      "id": "a1b2c3d4-0001-0001-0001-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "safevision-whatsapp",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "safevision-whatsapp",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-0001-0001-000000000002",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [460, 180],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "accepted",
+        "options": {
+          "responseCode": 202
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-0001-0001-000000000003",
+      "name": "Filter Critical + High",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 420],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cond-001",
+              "leftValue": "={{ $json.body.severity }}",
+              "rightValue": "low",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-0001-0001-000000000004",
+      "name": "Format Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [680, 420],
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "fields": {
+          "values": [
+            {
+              "name": "to",
+              "type": "stringValue",
+              "value": "={{ $vars.WHATSAPP_RECIPIENT }}"
+            },
+            {
+              "name": "from",
+              "type": "stringValue",
+              "value": "={{ $vars.WHATSAPP_SENDER }}"
+            },
+            {
+              "name": "body",
+              "type": "stringValue",
+              "value": "=🚨 *SafeVision Safety Alert*\n\n*Severity:* {{ $json.body.severity.toUpperCase() }}\n*Rule:* {{ $json.body.rule_name.replace(/_/g, ' ') }}\n*Zone:* {{ $json.body.zone_id.replace(/_/g, ' ') }}\n*Camera:* {{ $json.body.camera_id }}\n*Time:* {{ new Date($json.body.detected_at).toLocaleString('en-GB', {timeZone: 'UTC'}) }} UTC\n\nEvent ID: {{ $json.body.event_id }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-0001-0001-000000000005",
+      "name": "Send via Twilio WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 420],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.twilio.com/2010-04-01/Accounts/{{ $vars.TWILIO_ACCOUNT_SID }}/Messages.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "To",
+              "value": "=whatsapp:{{ $json.to }}"
+            },
+            {
+              "name": "From",
+              "value": "=whatsapp:{{ $json.from }}"
+            },
+            {
+              "name": "Body",
+              "value": "={{ $json.body }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "twilio-basic-auth",
+          "name": "Twilio Basic Auth"
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-0001-0001-000000000006",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [1120, 420],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filter Critical + High",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Critical + High": {
+      "main": [
+        [
+          {
+            "node": "Format Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Format Message": {
+      "main": [
+        [
+          {
+            "node": "Send via Twilio WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send via Twilio WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Log Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": ["safevision", "alerts", "whatsapp"],
+  "triggerCount": 0,
+  "updatedAt": "2026-05-08T00:00:00.000Z",
+  "versionId": "safevision-whatsapp-v1"
+}
