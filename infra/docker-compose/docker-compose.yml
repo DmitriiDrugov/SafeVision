@@ -338,6 +338,8 @@ services:
       METRICS_PORT: "8001"
       FPS_TARGET: "${FPS_TARGET:-5.0}"
       FRAME_ARCHIVE_DIR: /data/frame-archive
+      # How often (seconds) ingestion polls safevision:cameras for changes (default 30)
+      CAMERA_POLL_INTERVAL_SECS: "${CAMERA_POLL_INTERVAL_SECS:-30}"
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
     volumes:
@@ -366,6 +368,9 @@ services:
     environment:
       REDIS_URL: redis://redis:6379
       MODEL_PATH: /models/yolov8n-ppe.onnx
+      # Set MODEL_URL to download a production PPE-trained ONNX model on first boot.
+      # Leave blank to auto-export base YOLOv8n (dev placeholder only).
+      MODEL_URL: "${MODEL_URL:-}"
       DEVICE: "${INFERENCE_DEVICE:-cpu}"
       METRICS_PORT: "8002"
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"

@@ -38,6 +38,8 @@ spec:
               value: {{ .Values.inference.modelPath | quote }}
             - name: DEVICE
               value: {{ .Values.inference.device | quote }}
+            - name: MODEL_URL
+              value: {{ .Values.inference.modelUrl | quote }}
             - name: METRICS_PORT
               value: "8002"
             - name: LOG_LEVEL
@@ -47,7 +49,6 @@ spec:
           volumeMounts:
             - name: models
               mountPath: /models
-              readOnly: true
           resources:
             {{- toYaml .Values.inference.resources | nindent 12 }}
           readinessProbe:

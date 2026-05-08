@@ -30,13 +30,19 @@ COPY services/inference/pyproject.toml /app/services/inference/pyproject.toml
 RUN pip install --no-cache-dir -e "/app/services/inference"
 
 COPY services/inference/src /app/services/inference/src
+COPY services/inference/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 ENV PYTHONPATH=/app/services/inference/src
 ENV MODEL_PATH=/models/yolov8n-ppe.onnx
+
+# Models volume must be writable by appuser so the entrypoint can export on first boot
+RUN mkdir -p /models && chown appuser:appuser /models
 
 USER appuser
 
 HEALTHCHECK --interval=15s --timeout=10s --retries=3 \
     CMD python -c "import inference; print('ok')"
 
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["python", "-m", "inference.main"]

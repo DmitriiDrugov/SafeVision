@@ -98,6 +98,8 @@ ingestion:
   # JSON array of Camera objects (id, name, rtsp_url, zones, enabled).
   # Override per deployment with actual camera RTSP URLs.
   cameraConfig: "[]"
+  # Seconds between Redis polls for camera config changes (hot-reload).
+  cameraPollIntervalSecs: "30"
   frameArchiveDir: /data/frame-archive
   frameArchiveStorageClass: ""
   frameArchiveSize: 50Gi
@@ -117,6 +119,9 @@ inference:
       memory: 8Gi
   device: cpu             # "cpu" or "cuda"
   modelPath: /models/yolov8n-ppe.onnx
+  # Optional URL to download a PPE-trained model on first boot.
+  # Leave blank to auto-export base YOLOv8n (dev only).
+  modelUrl: ""
   modelsStorageClass: ""
   modelsStorageSize: 5Gi
   # GPU scheduling — set gpu.enabled: true when running on a GPU node.

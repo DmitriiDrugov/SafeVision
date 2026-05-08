@@ -34,6 +34,8 @@ spec:
               value: "8001"
             - name: FPS_TARGET
               value: {{ .Values.ingestion.fpsTarget | quote }}
+            - name: CAMERA_POLL_INTERVAL_SECS
+              value: {{ .Values.ingestion.cameraPollIntervalSecs | quote }}
             - name: FRAME_ARCHIVE_DIR
               value: {{ .Values.ingestion.frameArchiveDir | quote }}
             - name: LOG_LEVEL
