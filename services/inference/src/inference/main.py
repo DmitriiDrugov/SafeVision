@@ -28,6 +28,7 @@ from schemas.detection import DetectionPayload
 from .detector import Detector
 from .publisher import DetectionPublisher
 from .tracker import Tracker
+from .zones import ZoneAssigner
 
 structlog.configure(
     processors=[
@@ -122,6 +123,7 @@ async def _main() -> None:
     await _ensure_consumer_group(redis_client)
 
     publisher = DetectionPublisher(redis_client)
+    zone_assigner = ZoneAssigner(redis_client)
 
     running = True
 
@@ -166,6 +168,12 @@ async def _main() -> None:
                     tracked = await asyncio.get_event_loop().run_in_executor(
                         None, tracker.update, detections, frame_bgr, frame_event.camera_id
                     )
+
+                    await zone_assigner.refresh_if_stale()
+                    for obj in tracked:
+                        cx = (obj.bbox.x1 + obj.bbox.x2) / 2.0 / max(frame_event.width, 1)
+                        cy = (obj.bbox.y1 + obj.bbox.y2) / 2.0 / max(frame_event.height, 1)
+                        obj.zone_ids = zone_assigner.assign(frame_event.camera_id, cx, cy)
 
                     payload = DetectionPayload(
                         camera_id=frame_event.camera_id,

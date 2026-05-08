@@ -64,6 +64,24 @@ class IncidentModel(Base):
     )
 
 
+class CameraModel(Base):
+    __tablename__ = "cameras"
+
+    id: Mapped[str] = mapped_column(sa.String, primary_key=True)
+    name: Mapped[str] = mapped_column(sa.String, nullable=False)
+    rtsp_url: Mapped[str] = mapped_column(sa.String, nullable=False)
+    enabled: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, default=True)
+    zones: Mapped[list] = mapped_column(sa.JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True), server_default=sa.func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        sa.DateTime(timezone=True),
+        server_default=sa.func.now(),
+        onupdate=sa.func.now(),
+    )
+
+
 class AuditLogModel(Base):
     __tablename__ = "audit_log"
 

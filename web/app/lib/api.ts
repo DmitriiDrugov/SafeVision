@@ -246,3 +246,52 @@ export async function deleteRule(name: string): Promise<void> {
 export async function getCameras(): Promise<Camera[]> {
   return apiFetch<Camera[]>(API_BASE, '/api/v1/cameras')
 }
+
+export async function getCamera(id: string): Promise<Camera> {
+  return apiFetch<Camera>(API_BASE, `/api/v1/cameras/${encodeURIComponent(id)}`)
+}
+
+export interface CameraIn {
+  id: string
+  name: string
+  rtsp_url: string
+  enabled?: boolean
+  zones?: Zone[]
+}
+
+export async function createCamera(body: CameraIn): Promise<Camera> {
+  return apiFetch<Camera>(API_BASE, '/api/v1/cameras', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+}
+
+export async function updateCamera(
+  id: string,
+  body: Partial<CameraIn>,
+): Promise<Camera> {
+  return apiFetch<Camera>(API_BASE, `/api/v1/cameras/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
+}
+
+export async function deleteCamera(id: string): Promise<void> {
+  return apiFetch<void>(API_BASE, `/api/v1/cameras/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  })
+}
+
+export async function updateCameraZones(
+  id: string,
+  zones: Zone[],
+): Promise<Camera> {
+  return apiFetch<Camera>(
+    API_BASE,
+    `/api/v1/cameras/${encodeURIComponent(id)}/zones`,
+    {
+      method: 'PUT',
+      body: JSON.stringify(zones),
+    },
+  )
+}

@@ -32,6 +32,7 @@ from proto.otel import setup_otel
 from proto.violations import ViolationStreamEvent
 from schemas.event import ViolationEvent
 
+from .api.camera_routes import router as camera_router
 from .api.routes import ConnectionManager, IncidentOut, router
 from .db.models import Base, IncidentModel
 from .storage import IncidentStorage
@@ -180,6 +181,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.db_session_factory = session_factory
     app.state.ws_manager = ws_manager
     app.state.storage = storage
+    app.state.redis_client = redis_client
 
     start_http_server(metrics_port)
     logger.info("metrics.started", port=metrics_port)
@@ -207,6 +209,7 @@ app = FastAPI(
 )
 
 app.include_router(router, prefix="/api/v1")
+app.include_router(camera_router, prefix="/api/v1")
 
 
 @app.get("/health", tags=["ops"])
