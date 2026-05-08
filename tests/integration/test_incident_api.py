@@ -20,6 +20,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from incident.api.routes import ConnectionManager
+from incident.auth import UserInfo, get_current_user
 from incident.db.models import Base, IncidentModel
 from incident.main import app
 
@@ -49,10 +50,17 @@ async def client(session_factory) -> AsyncIterator[AsyncClient]:
     app.state.ws_manager = ConnectionManager()
     app.state.storage = storage_mock
 
+    # Bypass JWT auth for integration tests
+    app.dependency_overrides[get_current_user] = lambda: UserInfo(
+        username="test-operator", role="operator"
+    )
+
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         yield ac
+
+    app.dependency_overrides.clear()
 
 
 async def _seed_incident(

@@ -231,6 +231,49 @@ docker exec safevision-redis-1 redis-cli lindex notifications.dlq 0
 curl -X POST http://localhost:8005/api/v1/dlq/retry
 ```
 
+## Database Migrations (Alembic)
+
+Migrations run automatically when the Incident Service starts (Alembic `upgrade head`).
+For SQLite test environments, `create_all` is used instead.
+
+### Checking migration status
+
+```bash
+# From services/incident/ with DATABASE_URL in env
+alembic current          # current revision applied to the DB
+alembic history          # full revision chain
+alembic heads            # latest available revision
+```
+
+### Generating a new migration
+
+After changing models in `services/incident/src/incident/db/models.py`:
+
+```bash
+cd services/incident
+DATABASE_URL="postgresql+asyncpg://safevision:changeme@localhost:5432/safevision" \
+  alembic revision --autogenerate -m "describe your change"
+# Review the generated file in src/incident/db/migrations/versions/
+# Edit if needed, then commit
+```
+
+### Manual upgrade / rollback
+
+```bash
+alembic upgrade head      # apply all pending migrations
+alembic downgrade -1      # roll back one revision
+alembic downgrade base    # roll back everything (dangerous in prod)
+```
+
+### Running migrations before a production deploy
+
+In Kubernetes, use an init container that runs:
+```bash
+alembic -c /app/alembic.ini upgrade head
+```
+
+before the main Incident Service pod starts.
+
 ## Backup & Disaster Recovery
 
 ### Postgres backup

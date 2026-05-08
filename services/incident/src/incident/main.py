@@ -33,11 +33,13 @@ from proto.otel import setup_otel
 from proto.violations import ViolationStreamEvent
 from schemas.event import ViolationEvent
 
+from .db.migrate import run_migrations
+
 from .api.auth_routes import router as auth_router
 from .api.camera_routes import router as camera_router
 from .api.routes import ConnectionManager, IncidentOut, router
 from .clip_assembler import ClipAssembler
-from .db.models import Base, IncidentModel
+from .db.models import IncidentModel
 from .storage import IncidentStorage
 
 structlog.configure(
@@ -196,8 +198,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     engine = create_async_engine(database_url, pool_size=5, max_overflow=10)
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
 
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    await run_migrations(database_url, engine)
 
     storage = IncidentStorage()
     try:
