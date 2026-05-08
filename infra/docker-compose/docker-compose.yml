@@ -33,6 +33,7 @@ volumes:
   loki_data:
   n8n_data:
   models_data:    # YOLOv8 ONNX weights; populate via `docker cp` or a model-download init container
+  frame_archive:  # JPEG ring-buffer shared between ingestion (writer) and incident (reader)
 
 services:
 
@@ -248,9 +249,12 @@ services:
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       MINIO_USE_SSL: "false"
       MINIO_BUCKET_INCIDENTS: incidents
+      FRAME_ARCHIVE_DIR: /data/frame-archive
       METRICS_PORT: "8006"
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
+    volumes:
+      - frame_archive:/data/frame-archive:ro
     ports:
       - "8004:8004"    # FastAPI REST + WebSocket
       - "8006:8006"    # Prometheus metrics
@@ -308,8 +312,11 @@ services:
         [{"id":"cam01","name":"Line A","rtsp_url":"${CAM01_RTSP_URL:-rtsp://mediamtx:8554/cam01}","zones":[],"enabled":true}]
       METRICS_PORT: "8001"
       FPS_TARGET: "${FPS_TARGET:-5.0}"
+      FRAME_ARCHIVE_DIR: /data/frame-archive
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       OTEL_EXPORTER_OTLP_ENDPOINT: "${OTEL_EXPORTER_OTLP_ENDPOINT:-}"
+    volumes:
+      - frame_archive:/data/frame-archive
     ports:
       - "8001:8001"    # Prometheus metrics
     networks:

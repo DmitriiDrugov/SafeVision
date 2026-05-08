@@ -20,6 +20,7 @@ from prometheus_client import start_http_server
 from proto.otel import setup_otel
 from schemas.camera import Camera
 
+from .frame_archive import FrameArchive
 from .frame_publisher import FramePublisher
 from .stream_reader import StreamReader
 
@@ -60,9 +61,11 @@ async def _main() -> None:
 
     redis_client = await aioredis.from_url(redis_url, decode_responses=True)
 
-    publisher = FramePublisher(redis_client)
+    archive = FrameArchive()
+    publisher = FramePublisher(redis_client, archive=archive)
     readers = [StreamReader(camera=cam, publisher=publisher, fps_target=fps_target) for cam in cameras]
 
+    cleanup_task = asyncio.create_task(archive.run_cleanup(), name="frame-archive-cleanup")
     tasks = [asyncio.create_task(r.run(), name=f"reader-{r._camera.id}") for r in readers]
 
     loop = asyncio.get_running_loop()
@@ -83,7 +86,8 @@ async def _main() -> None:
         r.stop()
     for t in tasks:
         t.cancel()
-    await asyncio.gather(*tasks, return_exceptions=True)
+    cleanup_task.cancel()
+    await asyncio.gather(*tasks, cleanup_task, return_exceptions=True)
 
     await redis_client.aclose()
     logger.info("ingestion.stopped")

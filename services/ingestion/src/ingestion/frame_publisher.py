@@ -32,10 +32,83 @@ class FramePublisher:
     STREAM_NAME = "frames.raw"
     STREAM_MAXLEN = 1000
 
-    def __init__(self, redis_client: aioredis.Redis) -> None:
+    def __init__(
+        self,
+        redis_client: aioredis.Redis,
+        archive: object | None = None,  # FrameArchive | None
+    ) -> None:
         self._redis = redis_client
+        self._archive = archive
         self._seq: dict[str, int] = defaultdict(int)
         self._log = logger.bind(stream=self.STREAM_NAME)
+
+    async def publish(
+        self,
+        camera_id: str,
+        frame: np.ndarray,
+        timestamp: datetime,
+    ) -> str:
+        """Write frame to SHM, publish FrameEvent to Redis, optionally archive JPEG."""
+        t0 = time.perf_counter()
+
+        frame_id = self._next_sequence(camera_id)
+        shm_name = f"sv_{camera_id.replace('-', '_')}_{frame_id}"
+
+        shm = SharedMemory(name=shm_name, create=True, size=int(frame.nbytes))
+        try:
+            np.copyto(
+                np.ndarray(frame.shape, dtype=frame.dtype, buffer=shm.buf),
+                frame,
+            )
+            shm.close()
+        except Exception:
+            shm.close()
+            shm.unlink()
+            raise
+
+        _shm_blocks_active.inc()
+
+        event = FrameEvent(
+            camera_id=camera_id,
+            frame_id=frame_id,
+            timestamp=timestamp,
+            shm_name=shm_name,
+            shm_offset=0,
+            width=frame.shape[1],
+            height=frame.shape[0],
+            channels=frame.shape[2] if frame.ndim == 3 else 1,
+        )
+
+        await self._redis.xadd(
+            self.STREAM_NAME,
+            {"data": event.model_dump_json()},
+            maxlen=self.STREAM_MAXLEN,
+            approximate=True,
+        )
+
+        # Write JPEG to the frame archive for clip assembly (non-blocking)
+        if self._archive is not None:
+            ts_ms = int(timestamp.timestamp() * 1000)
+            import asyncio
+            await asyncio.get_event_loop().run_in_executor(
+                None, self._archive.write, camera_id, ts_ms, frame
+            )
+
+        elapsed = time.perf_counter() - t0
+        _publish_latency.labels(camera_id=camera_id).observe(elapsed)
+        self._log.debug(
+            "frame.published",
+            camera_id=camera_id,
+            frame_id=frame_id,
+            shm_name=shm_name,
+            latency_ms=round(elapsed * 1000, 2),
+        )
+        return shm_name
+
+    def _next_sequence(self, camera_id: str) -> int:
+        seq = self._seq[camera_id]
+        self._seq[camera_id] += 1
+        return seq
 
     async def publish(
         self,

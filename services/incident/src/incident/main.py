@@ -34,6 +34,7 @@ from schemas.event import ViolationEvent
 
 from .api.camera_routes import router as camera_router
 from .api.routes import ConnectionManager, IncidentOut, router
+from .clip_assembler import ClipAssembler
 from .db.models import Base, IncidentModel
 from .storage import IncidentStorage
 
@@ -88,10 +89,28 @@ def _violation_to_incident(v: ViolationEvent) -> IncidentModel:
     )
 
 
+async def _assemble_clip(
+    assembler: ClipAssembler,
+    incident_id: str,
+    camera_id: str,
+    detected_at: datetime,
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    url = await assembler.assemble_and_upload(incident_id, camera_id, detected_at)
+    if url:
+        async with session_factory() as db:
+            row = await db.get(IncidentModel, incident_id)
+            if row:
+                row.clip_url = url
+                await db.commit()
+        logger.info("incident.clip_saved", incident_id=incident_id)
+
+
 async def _stream_consumer(
     redis_client: aioredis.Redis,
     session_factory: async_sessionmaker[AsyncSession],
     ws_manager: ConnectionManager,
+    assembler: ClipAssembler,
 ) -> None:
     logger.info("incident.consumer.started", stream=_STREAM_INPUT)
     while True:
@@ -125,6 +144,17 @@ async def _stream_consumer(
                         _incidents_created.labels(
                             severity=stream_event.payload.severity.value
                         ).inc()
+
+                        asyncio.create_task(
+                            _assemble_clip(
+                                assembler,
+                                incident_row.id,
+                                incident_row.camera_id,
+                                incident_row.detected_at,
+                                session_factory,
+                            ),
+                            name=f"clip-{incident_row.id}",
+                        )
                         logger.info(
                             "incident.created",
                             id=incident_row.id,
@@ -186,8 +216,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     start_http_server(metrics_port)
     logger.info("metrics.started", port=metrics_port)
 
+    assembler = ClipAssembler(storage)
+
     consumer_task = asyncio.create_task(
-        _stream_consumer(redis_client, session_factory, ws_manager),
+        _stream_consumer(redis_client, session_factory, ws_manager, assembler),
         name="incident-consumer",
     )
 

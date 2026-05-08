@@ -1,7 +1,7 @@
 """Incident Service REST + WebSocket routes."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Annotated, Any
 
 import structlog
@@ -193,6 +193,21 @@ async def mark_false_positive(
     await db.refresh(row)
     _incident_fp.labels(severity=row.severity).inc()
     return IncidentOut.model_validate(row)
+
+
+@router.get("/{incident_id}/evidence")
+async def get_evidence_url(
+    incident_id: str, db: DBSession, request: Request
+) -> dict[str, str]:
+    row = await _get_incident_or_404(incident_id, db)
+    if not row.clip_url:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Evidence clip not available yet",
+        )
+    url: str = await request.app.state.storage.get_presigned_url(incident_id)
+    expires_at = (datetime.now(tz=timezone.utc) + timedelta(days=7)).isoformat()
+    return {"url": url, "expires_at": expires_at}
 
 
 # ── WebSocket ─────────────────────────────────────────────────────────────
