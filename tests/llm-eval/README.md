@@ -5,8 +5,16 @@ descriptions into valid YAML rules.
 
 ## Dataset
 
-`test_cases.json` contains pairs of `{nl_prompt, expected_yaml}`. Grow this
-to ≥50 cases before shipping M6.
+`test_cases.json` contains 50 pairs of `{nl_prompt, expected_yaml}` covering:
+
+- All PPE types: helmet, vest, gloves, mask
+- All actions: entering, exiting, standing, moving
+- All severities: low, medium, high, critical
+- All channels: whatsapp, email, dashboard, all
+- All object types: person, forklift, vehicle
+- Duration-only, min_count-only, and combined constraints
+- PPE + action combinations
+- Varied natural-language phrasings for the same underlying rule
 
 ## Running
 

@@ -23,5 +23,230 @@
     "id": "tc005",
     "nl_prompt": "Log a low-severity dashboard entry when a vehicle exits the loading dock.",
     "expected_yaml": "rule:\n  name: vehicle_exiting_loading_dock\n  zone: loading_dock\n  condition:\n    object: vehicle\n    action: exiting\n  action:\n    type: log\n    severity: low\n    channel: dashboard\n  enabled: true\n"
+  },
+  {
+    "id": "tc006",
+    "nl_prompt": "Send a high-severity WhatsApp alert when someone in the assembly area is not wearing gloves.",
+    "expected_yaml": "rule:\n  name: no_gloves_assembly_area\n  zone: assembly_area\n  condition:\n    object: person\n    missing_ppe: gloves\n  action:\n    type: alert\n    severity: high\n    channel: whatsapp\n  enabled: true\n"
+  },
+  {
+    "id": "tc007",
+    "nl_prompt": "Alert via email with critical severity if a worker in the spray booth is detected without a mask.",
+    "expected_yaml": "rule:\n  name: no_mask_spray_booth\n  zone: spray_booth\n  condition:\n    object: person\n    missing_ppe: mask\n  action:\n    type: alert\n    severity: critical\n    channel: email\n  enabled: true\n"
+  },
+  {
+    "id": "tc008",
+    "nl_prompt": "Log a medium-severity event on the dashboard when a person without a safety vest enters the construction site.",
+    "expected_yaml": "rule:\n  name: no_vest_construction_site\n  zone: construction_site\n  condition:\n    object: person\n    missing_ppe: vest\n    action: entering\n  action:\n    type: log\n    severity: medium\n    channel: dashboard\n  enabled: true\n"
+  },
+  {
+    "id": "tc009",
+    "nl_prompt": "Send a critical alert to all channels when a worker without gloves is detected in the acid handling zone.",
+    "expected_yaml": "rule:\n  name: no_gloves_acid_handling\n  zone: acid_handling\n  condition:\n    object: person\n    missing_ppe: gloves\n  action:\n    type: alert\n    severity: critical\n    channel: all\n  enabled: true\n"
+  },
+  {
+    "id": "tc010",
+    "nl_prompt": "Log to the dashboard when someone without a dust mask is standing in the grinding area.",
+    "expected_yaml": "rule:\n  name: no_mask_grinding_area\n  zone: grinding_area\n  condition:\n    object: person\n    missing_ppe: mask\n    action: standing\n  action:\n    type: log\n    severity: medium\n    channel: dashboard\n  enabled: true\n"
+  },
+  {
+    "id": "tc011",
+    "nl_prompt": "Send a medium-severity email alert when a forklift exits the warehouse through gate B.",
+    "expected_yaml": "rule:\n  name: forklift_exiting_gate_b\n  zone: gate_b\n  condition:\n    object: forklift\n    action: exiting\n  action:\n    type: alert\n    severity: medium\n    channel: email\n  enabled: true\n"
+  },
+  {
+    "id": "tc012",
+    "nl_prompt": "Log a high-severity WhatsApp notification when a vehicle is moving in the restricted zone.",
+    "expected_yaml": "rule:\n  name: vehicle_moving_restricted_zone\n  zone: restricted_zone\n  condition:\n    object: vehicle\n    action: moving\n  action:\n    type: alert\n    severity: high\n    channel: whatsapp\n  enabled: true\n"
+  },
+  {
+    "id": "tc013",
+    "nl_prompt": "Send a critical WhatsApp alert when a person is moving in the high-voltage area.",
+    "expected_yaml": "rule:\n  name: person_moving_high_voltage\n  zone: high_voltage_area\n  condition:\n    object: person\n    action: moving\n  action:\n    type: alert\n    severity: critical\n    channel: whatsapp\n  enabled: true\n"
+  },
+  {
+    "id": "tc014",
+    "nl_prompt": "Log to the dashboard when a forklift is moving through the office corridor.",
+    "expected_yaml": "rule:\n  name: forklift_moving_office_corridor\n  zone: office_corridor\n  condition:\n    object: forklift\n    action: moving\n  action:\n    type: log\n    severity: medium\n    channel: dashboard\n  enabled: true\n"
+  },
+  {
+    "id": "tc015",
+    "nl_prompt": "Alert via all channels with high severity when a vehicle enters the server room area.",
+    "expected_yaml": "rule:\n  name: vehicle_entering_server_room\n  zone: server_room\n  condition:\n    object: vehicle\n    action: entering\n  action:\n    type: alert\n    severity: high\n    channel: all\n  enabled: true\n"
+  },
+  {
+    "id": "tc016",
+    "nl_prompt": "Log a low-severity dashboard event when anyone enters the visitor lobby.",
+    "expected_yaml": "rule:\n  name: person_entering_visitor_lobby\n  zone: visitor_lobby\n  condition:\n    object: person\n    action: entering\n  action:\n    type: log\n    severity: low\n    channel: dashboard\n  enabled: true\n"
+  },
+  {
+    "id": "tc017",
+    "nl_prompt": "Send a medium-severity email when a person exits the clean room.",
+    "expected_yaml": "rule:\n  name: person_exiting_clean_room\n  zone: clean_room\n  condition:\n    object: person\n    action: exiting\n  action:\n    type: alert\n    severity: medium\n    channel: email\n  enabled: true\n"
+  },
+  {
+    "id": "tc018",
+    "nl_prompt": "Send a critical alert on all channels when a person without a helmet is detected in the blasting area.",
+    "expected_yaml": "rule:\n  name: no_helmet_blasting_area\n  zone: blasting_area\n  condition:\n    object: person\n    missing_ppe: helmet\n  action:\n    type: alert\n    severity: critical\n    channel: all\n  enabled: true\n"
+  },
+  {
+    "id": "tc019",
+    "nl_prompt": "Log a low-severity entry on the dashboard when a forklift enters the parking lot.",
+    "expected_yaml": "rule:\n  name: forklift_entering_parking_lot\n  zone: parking_lot\n  condition:\n    object: forklift\n    action: entering\n  action:\n    type: log\n    severity: low\n    channel: dashboard\n  enabled: true\n"
+  },
+  {
+    "id": "tc020",
+    "nl_prompt": "Alert via WhatsApp with high severity when a person stands in the forklift crossing zone for more than 10 seconds.",
+    "expected_yaml": "rule:\n  name: person_standing_forklift_crossing\n  zone: forklift_crossing\n  condition:\n    object: person\n    action: standing\n    duration_seconds: 10\n  action:\n    type: alert\n    severity: high\n    channel: whatsapp\n  enabled: true\n"
+  },
+  {
+    "id": "tc021",
+    "nl_prompt": "Send a critical email alert if a vehicle is stationary in the fire lane for more than 60 seconds.",
+    "expected_yaml": "rule:\n  name: vehicle_standing_fire_lane\n  zone: fire_lane\n  condition:\n    object: vehicle\n    action: standing\n    duration_seconds: 60\n  action:\n    type: alert\n    severity: critical\n    channel: email\n  enabled: true\n"
+  },
+  {
+    "id": "tc022",
+    "nl_prompt": "Log a medium-severity dashboard event when a forklift stands still in zone C for more than 45 seconds.",
+    "expected_yaml": "rule:\n  name: forklift_standing_zone_c\n  zone: zone_c\n  condition:\n    object: forklift\n    action: standing\n    duration_seconds: 45\n  action:\n    type: log\n    severity: medium\n    channel: dashboard\n  enabled: true\n"
+  },
+  {
+    "id": "tc023",
+    "nl_prompt": "Send a high-severity alert to all channels when a person is idle in the loading bay for more than 120 seconds.",
+    "expected_yaml": "rule:\n  name: person_standing_loading_bay\n  zone: loading_bay\n  condition:\n    object: person\n    action: standing\n    duration_seconds: 120\n  action:\n    type: alert\n    severity: high\n    channel: all\n  enabled: true\n"
+  },
+  {
+    "id": "tc024",
+    "nl_prompt": "Send a high-severity WhatsApp alert when 5 or more people are detected in the muster station.",
+    "expected_yaml": "rule:\n  name: crowd_muster_station\n  zone: muster_station\n  condition:\n    object: person\n    min_count: 5\n  action:\n    type: alert\n    severity: high\n    channel: whatsapp\n  enabled: true\n"
+  },
+  {
+    "id": "tc025",
+    "nl_prompt": "Log to the dashboard if more than 2 forklifts are present in the narrow aisle zone at the same time.",
+    "expected_yaml": "rule:\n  name: multiple_forklifts_narrow_aisle\n  zone: narrow_aisle\n  condition:\n    object: forklift\n    min_count: 3\n  action:\n    type: log\n    severity: medium\n    channel: dashboard\n  enabled: true\n"
+  },
+  {
+    "id": "tc026",
+    "nl_prompt": "Send a critical alert on all channels when 4 or more vehicles are in the dispatch yard simultaneously.",
+    "expected_yaml": "rule:\n  name: overcrowded_dispatch_yard\n  zone: dispatch_yard\n  condition:\n    object: vehicle\n    min_count: 4\n  action:\n    type: alert\n    severity: critical\n    channel: all\n  enabled: true\n"
+  },
+  {
+    "id": "tc027",
+    "nl_prompt": "Send a critical alert on all channels when 2 or more vehicles are standing in the emergency exit zone for more than 15 seconds.",
+    "expected_yaml": "rule:\n  name: vehicles_blocking_emergency_exit_b\n  zone: emergency_exit\n  condition:\n    object: vehicle\n    action: standing\n    duration_seconds: 15\n    min_count: 2\n  action:\n    type: alert\n    severity: critical\n    channel: all\n  enabled: true\n"
+  },
+  {
+    "id": "tc028",
+    "nl_prompt": "Send a high-severity email if 3 or more people have been standing in the safety briefing zone for over 90 seconds.",
+    "expected_yaml": "rule:\n  name: group_standing_safety_briefing\n  zone: safety_briefing\n  condition:\n    object: person\n    action: standing\n    duration_seconds: 90\n    min_count: 3\n  action:\n    type: alert\n    severity: high\n    channel: email\n  enabled: true\n"
+  },
+  {
+    "id": "tc029",
+    "nl_prompt": "Log a medium-severity dashboard event when 2 or more forklifts are moving in the shipping dock for more than 20 seconds.",
+    "expected_yaml": "rule:\n  name: multiple_forklifts_moving_shipping_dock\n  zone: shipping_dock\n  condition:\n    object: forklift\n    action: moving\n    duration_seconds: 20\n    min_count: 2\n  action:\n    type: log\n    severity: medium\n    channel: dashboard\n  enabled: true\n"
+  },
+  {
+    "id": "tc030",
+    "nl_prompt": "Send a high-severity WhatsApp alert when a person without a helmet is entering the welding area.",
+    "expected_yaml": "rule:\n  name: no_helmet_entering_welding\n  zone: welding_area\n  condition:\n    object: person\n    missing_ppe: helmet\n    action: entering\n  action:\n    type: alert\n    severity: high\n    channel: whatsapp\n  enabled: true\n"
+  },
+  {
+    "id": "tc031",
+    "nl_prompt": "Alert via email with critical severity if someone without gloves is moving through the chemical lab.",
+    "expected_yaml": "rule:\n  name: no_gloves_moving_chemical_lab\n  zone: chemical_lab\n  condition:\n    object: person\n    missing_ppe: gloves\n    action: moving\n  action:\n    type: alert\n    severity: critical\n    channel: email\n  enabled: true\n"
+  },
+  {
+    "id": "tc032",
+    "nl_prompt": "Log a medium-severity dashboard event when a worker without a vest is exiting the paint shop.",
+    "expected_yaml": "rule:\n  name: no_vest_exiting_paint_shop\n  zone: paint_shop\n  condition:\n    object: person\n    missing_ppe: vest\n    action: exiting\n  action:\n    type: log\n    severity: medium\n    channel: dashboard\n  enabled: true\n"
+  },
+  {
+    "id": "tc033",
+    "nl_prompt": "Send a critical alert on all channels when a person without a mask is standing in the fume extraction zone.",
+    "expected_yaml": "rule:\n  name: no_mask_standing_fume_extraction\n  zone: fume_extraction\n  condition:\n    object: person\n    missing_ppe: mask\n    action: standing\n  action:\n    type: alert\n    severity: critical\n    channel: all\n  enabled: true\n"
+  },
+  {
+    "id": "tc034",
+    "nl_prompt": "Trigger a high-severity WhatsApp notification if anyone is spotted without head protection in the roof access area.",
+    "expected_yaml": "rule:\n  name: no_helmet_roof_access\n  zone: roof_access\n  condition:\n    object: person\n    missing_ppe: helmet\n  action:\n    type: alert\n    severity: high\n    channel: whatsapp\n  enabled: true\n"
+  },
+  {
+    "id": "tc035",
+    "nl_prompt": "Raise a critical email alarm if a worker is observed moving without a hard hat through the demolition zone.",
+    "expected_yaml": "rule:\n  name: no_helmet_moving_demolition_zone\n  zone: demolition_zone\n  condition:\n    object: person\n    missing_ppe: helmet\n    action: moving\n  action:\n    type: alert\n    severity: critical\n    channel: email\n  enabled: true\n"
+  },
+  {
+    "id": "tc036",
+    "nl_prompt": "Notify the dashboard with medium severity whenever a heavy vehicle is observed entering zone D.",
+    "expected_yaml": "rule:\n  name: vehicle_entering_zone_d\n  zone: zone_d\n  condition:\n    object: vehicle\n    action: entering\n  action:\n    type: log\n    severity: medium\n    channel: dashboard\n  enabled: true\n"
+  },
+  {
+    "id": "tc037",
+    "nl_prompt": "Create a low-severity log entry when any worker leaves the maintenance bay.",
+    "expected_yaml": "rule:\n  name: person_exiting_maintenance_bay\n  zone: maintenance_bay\n  condition:\n    object: person\n    action: exiting\n  action:\n    type: log\n    severity: low\n    channel: dashboard\n  enabled: true\n"
+  },
+  {
+    "id": "tc038",
+    "nl_prompt": "Generate a critical WhatsApp alert when an unauthorized vehicle is detected inside the secure compound.",
+    "expected_yaml": "rule:\n  name: vehicle_in_secure_compound\n  zone: secure_compound\n  condition:\n    object: vehicle\n  action:\n    type: alert\n    severity: critical\n    channel: whatsapp\n  enabled: true\n"
+  },
+  {
+    "id": "tc039",
+    "nl_prompt": "Alert on WhatsApp with high severity if a person without a helmet or vest is detected in the heavy machinery zone.",
+    "expected_yaml": "rule:\n  name: no_helmet_heavy_machinery\n  zone: heavy_machinery\n  condition:\n    object: person\n    missing_ppe: helmet\n  action:\n    type: alert\n    severity: high\n    channel: whatsapp\n  enabled: true\n"
+  },
+  {
+    "id": "tc040",
+    "nl_prompt": "Send a high-severity email when a person without a safety vest enters the active construction zone.",
+    "expected_yaml": "rule:\n  name: no_vest_entering_construction\n  zone: active_construction\n  condition:\n    object: person\n    missing_ppe: vest\n    action: entering\n  action:\n    type: alert\n    severity: high\n    channel: email\n  enabled: true\n"
+  },
+  {
+    "id": "tc041",
+    "nl_prompt": "Log a low-severity dashboard note when a forklift exits zone A.",
+    "expected_yaml": "rule:\n  name: forklift_exiting_zone_a\n  zone: zone_a\n  condition:\n    object: forklift\n    action: exiting\n  action:\n    type: log\n    severity: low\n    channel: dashboard\n  enabled: true\n"
+  },
+  {
+    "id": "tc042",
+    "nl_prompt": "Send a medium-severity alert on all channels if 2 or more people are detected without hard hats in the crane operation zone.",
+    "expected_yaml": "rule:\n  name: no_helmet_crane_operation\n  zone: crane_operation\n  condition:\n    object: person\n    missing_ppe: helmet\n    min_count: 2\n  action:\n    type: alert\n    severity: medium\n    channel: all\n  enabled: true\n"
+  },
+  {
+    "id": "tc043",
+    "nl_prompt": "Send a critical WhatsApp alert when a person without protective gloves is standing in the battery charging station for more than 30 seconds.",
+    "expected_yaml": "rule:\n  name: no_gloves_standing_battery_station\n  zone: battery_station\n  condition:\n    object: person\n    missing_ppe: gloves\n    action: standing\n    duration_seconds: 30\n  action:\n    type: alert\n    severity: critical\n    channel: whatsapp\n  enabled: true\n"
+  },
+  {
+    "id": "tc044",
+    "nl_prompt": "Send a high-severity alert to all channels when 5 or more workers are present in the confined space entry zone.",
+    "expected_yaml": "rule:\n  name: crowd_confined_space\n  zone: confined_space_entry\n  condition:\n    object: person\n    min_count: 5\n  action:\n    type: alert\n    severity: high\n    channel: all\n  enabled: true\n"
+  },
+  {
+    "id": "tc045",
+    "nl_prompt": "Log a low-severity event on the dashboard when a vehicle enters the fuel depot.",
+    "expected_yaml": "rule:\n  name: vehicle_entering_fuel_depot\n  zone: fuel_depot\n  condition:\n    object: vehicle\n    action: entering\n  action:\n    type: log\n    severity: low\n    channel: dashboard\n  enabled: true\n"
+  },
+  {
+    "id": "tc046",
+    "nl_prompt": "Raise a critical alert on all channels if a person without a dust mask is moving inside the sandblasting room.",
+    "expected_yaml": "rule:\n  name: no_mask_moving_sandblasting\n  zone: sandblasting_room\n  condition:\n    object: person\n    missing_ppe: mask\n    action: moving\n  action:\n    type: alert\n    severity: critical\n    channel: all\n  enabled: true\n"
+  },
+  {
+    "id": "tc047",
+    "nl_prompt": "Send a medium-severity email when a forklift is standing still in the cold storage area for more than 60 seconds.",
+    "expected_yaml": "rule:\n  name: forklift_standing_cold_storage\n  zone: cold_storage\n  condition:\n    object: forklift\n    action: standing\n    duration_seconds: 60\n  action:\n    type: alert\n    severity: medium\n    channel: email\n  enabled: true\n"
+  },
+  {
+    "id": "tc048",
+    "nl_prompt": "Alert via WhatsApp with high severity when 3 or more vehicles are moving in the marshalling yard.",
+    "expected_yaml": "rule:\n  name: vehicles_moving_marshalling_yard\n  zone: marshalling_yard\n  condition:\n    object: vehicle\n    action: moving\n    min_count: 3\n  action:\n    type: alert\n    severity: high\n    channel: whatsapp\n  enabled: true\n"
+  },
+  {
+    "id": "tc049",
+    "nl_prompt": "Send a critical email if a worker without safety gloves is entering the high-temperature furnace area.",
+    "expected_yaml": "rule:\n  name: no_gloves_entering_furnace\n  zone: furnace_area\n  condition:\n    object: person\n    missing_ppe: gloves\n    action: entering\n  action:\n    type: alert\n    severity: critical\n    channel: email\n  enabled: true\n"
+  },
+  {
+    "id": "tc050",
+    "nl_prompt": "Log a medium-severity event on the dashboard when a person without a vest is detected in the warehouse zone B.",
+    "expected_yaml": "rule:\n  name: no_vest_warehouse_zone_b\n  zone: warehouse_zone_b\n  condition:\n    object: person\n    missing_ppe: vest\n  action:\n    type: log\n    severity: medium\n    channel: dashboard\n  enabled: true\n"
   }
 ]
