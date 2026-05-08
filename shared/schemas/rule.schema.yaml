@@ -1,0 +1,39 @@
+# SafeVision — Canonical Rule Schema
+# All rules submitted to the Rule Engine must conform to this structure.
+# See docs/RULE-AUTHORING.md for examples and field explanations.
+
+rule:
+  # Unique identifier for the rule. Must be snake_case.
+  name: string  # e.g. "no_helmet_forklift_zone"
+
+  # ID of the zone this rule applies to. Must match a zone defined on the camera.
+  zone: string  # e.g. "zone_forklift_a"
+
+  condition:
+    # The object type to detect.
+    object: person | forklift | vehicle
+
+    # Optional: trigger only when object is missing this PPE item.
+    missing_ppe: helmet | vest | gloves | mask  # optional
+
+    # Optional: trigger only when object is performing this action.
+    action: entering | exiting | standing | moving  # optional
+
+    # Optional: only trigger after the object has been in violation for this many seconds.
+    duration_seconds: number  # optional, e.g. 5.0
+
+    # Optional: only trigger when at least this many objects meet the condition simultaneously.
+    min_count: number  # optional, e.g. 3
+
+  action:
+    # What the Rule Engine should do when condition is met.
+    type: alert | log | block
+
+    # Severity level for the generated incident and notification.
+    severity: low | medium | high | critical
+
+    # Notification channel(s) to route the alert to.
+    channel: whatsapp | email | dashboard | all
+
+  # Whether this rule is actively evaluated. Can be toggled without deleting the rule.
+  enabled: true | false

@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "claude/**", "feature/**"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  lint-python:
+    name: Lint Python (ruff + mypy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install lint tools
+        run: pip install ruff mypy pydantic
+      - name: ruff check
+        run: ruff check shared/ services/
+      - name: mypy (shared schemas)
+        run: mypy shared/schemas/ shared/proto/
+
+  lint-web:
+    name: Lint Web (eslint + prettier)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: web/app/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+        working-directory: web/app
+      - name: eslint
+        run: npm run lint
+        working-directory: web/app
+      - name: prettier check
+        run: npm run format:check
+        working-directory: web/app
+
+  test-unit:
+    name: Unit Tests (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [ingestion, inference, rule-engine, incident, notification]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install service + shared
+        run: |
+          pip install -e shared/
+          pip install -e services/${{ matrix.service }}/[dev]
+      - name: pytest
+        run: pytest services/${{ matrix.service }}/tests/ -v --tb=short
+
+  test-web:
+    name: Unit Tests (web)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: web/app/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+        working-directory: web/app
+      - name: vitest
+        run: npm run test
+        working-directory: web/app
+
+  build-images:
+    name: Build Docker Image (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    needs: [lint-python, lint-web, test-unit, test-web]
+    strategy:
+      matrix:
+        include:
+          - service: ingestion
+            context: .
+            dockerfile: services/ingestion/Dockerfile
+          - service: inference
+            context: .
+            dockerfile: services/inference/Dockerfile
+          - service: rule-engine
+            context: .
+            dockerfile: services/rule-engine/Dockerfile
+          - service: incident
+            context: .
+            dockerfile: services/incident/Dockerfile
+          - service: notification
+            context: .
+            dockerfile: services/notification/Dockerfile
+          - service: web
+            context: web/app
+            dockerfile: web/app/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: false
+          tags: ghcr.io/dmitriidrugov/safevision/${{ matrix.service }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

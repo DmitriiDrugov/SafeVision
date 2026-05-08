@@ -1,0 +1,48 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # TODO: Add AlertManager when deployed: ['alertmanager:9093']
+
+rule_files: []
+  # TODO: Add alert rule files:
+  # - /etc/prometheus/alerts/*.yml
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # ─── Infrastructure ───────────────────────────────────────────────────────
+  # Application services expose /metrics on their HTTP ports.
+  # Uncomment each block when the corresponding container is deployed.
+
+  # - job_name: ingestion
+  #   static_configs:
+  #     - targets: ["ingestion:8001"]
+
+  # - job_name: inference
+  #   static_configs:
+  #     - targets: ["inference:8002"]
+
+  # - job_name: rule-engine
+  #   static_configs:
+  #     - targets: ["rule-engine:8003"]
+
+  # - job_name: incident
+  #   static_configs:
+  #     - targets: ["incident:8004"]
+
+  # - job_name: notification
+  #   static_configs:
+  #     - targets: ["notification:8005"]
+
+  # ─── MinIO metrics ────────────────────────────────────────────────────────
+  # - job_name: minio
+  #   metrics_path: /minio/v2/metrics/cluster
+  #   static_configs:
+  #     - targets: ["minio:9000"]

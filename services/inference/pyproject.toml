@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "safevision-inference"
+version = "0.1.0"
+description = "SafeVision Inference Service — YOLOv8 object detection and ByteTrack tracking"
+requires-python = ">=3.11"
+dependencies = [
+    "ultralytics>=8.2",
+    "opencv-python-headless>=4.9",
+    "onnxruntime-gpu>=1.17",
+    "numpy>=1.26",
+    "redis[hiredis]>=5.0",
+    "structlog>=24.1",
+    "prometheus-client>=0.20",
+    "opentelemetry-sdk>=1.23",
+    "opentelemetry-exporter-otlp>=1.23",
+    "pydantic>=2.0",
+    "safevision-schemas @ file://../../shared/schemas",
+    "safevision-proto @ file://../../shared/proto",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "pytest-mock>=3.12"]
+cpu = ["onnxruntime>=1.17"]  # CPU-only fallback for dev without GPU
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/inference"]

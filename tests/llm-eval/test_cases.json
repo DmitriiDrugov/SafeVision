@@ -1,0 +1,17 @@
+[
+  {
+    "id": "tc001",
+    "nl_prompt": "Alert with high severity on WhatsApp when a person without a helmet is detected in the welding bay.",
+    "expected_yaml": "rule:\n  name: no_helmet_welding_bay\n  zone: welding_bay\n  condition:\n    object: person\n    missing_ppe: helmet\n  action:\n    type: alert\n    severity: high\n    channel: whatsapp\n  enabled: true\n"
+  },
+  {
+    "id": "tc002",
+    "nl_prompt": "Log to the dashboard when a forklift enters the pedestrian corridor.",
+    "expected_yaml": "rule:\n  name: forklift_in_pedestrian_corridor\n  zone: pedestrian_corridor\n  condition:\n    object: forklift\n    action: entering\n  action:\n    type: log\n    severity: medium\n    channel: dashboard\n  enabled: true\n"
+  },
+  {
+    "id": "tc003",
+    "nl_prompt": "Send a critical alert to all channels when three or more vehicles are standing in the emergency exit zone for more than 30 seconds.",
+    "expected_yaml": "rule:\n  name: vehicles_blocking_emergency_exit\n  zone: emergency_exit\n  condition:\n    object: vehicle\n    action: standing\n    duration_seconds: 30\n    min_count: 3\n  action:\n    type: alert\n    severity: critical\n    channel: all\n  enabled: true\n"
+  }
+]

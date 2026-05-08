@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "safevision-rule-engine"
+version = "0.1.0"
+description = "SafeVision Rule Engine — evaluates declarative YAML rules against detections"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+    "redis[hiredis]>=5.0",
+    "structlog>=24.1",
+    "prometheus-client>=0.20",
+    "opentelemetry-sdk>=1.23",
+    "opentelemetry-exporter-otlp>=1.23",
+    "watchdog>=4.0",
+    "safevision-schemas @ file://../../shared/schemas",
+    "safevision-proto @ file://../../shared/proto",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "pytest-mock>=3.12"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rule_engine"]
