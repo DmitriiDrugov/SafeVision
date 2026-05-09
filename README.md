@@ -88,14 +88,16 @@ Access points after boot:
 
 | Milestone | Scope | Status |
 |---|---|---|
-| M1 | Ingestion + Inference, single camera, console output | 🔲 |
-| M2 | Rule Engine + Redis Streams, synthetic incidents | 🔲 |
-| M3 | Incident Service + Postgres + MinIO clips | 🔲 |
-| M4 | Notification Service + n8n + WhatsApp demo | 🔲 |
-| M5 | Configuration UI — dashboard, rule list, zone editor | 🔲 |
-| M6 | Chat-based rule builder (OpenRouter / Llama) | 🔲 |
-| M7 | CI/CD, observability stack, Grafana dashboards | 🔲 |
-| M8 | E2E test, load test, README, demo video | 🔲 |
+| M1 | Ingestion + Inference, single camera, console output | ✅ |
+| M2 | Rule Engine + Redis Streams, synthetic incidents | ✅ |
+| M3 | Incident Service + Postgres + MinIO clips | ✅ |
+| M4 | Notification Service + n8n + WhatsApp demo | ✅ |
+| M5 | Configuration UI — dashboard, rule list, zone editor | ✅ |
+| M6 | Chat-based rule builder (OpenRouter / Llama) | ✅ |
+| M7 | CI/CD, observability stack, Grafana dashboards | ✅ |
+| M8 | E2E tests, load tests, LLM eval, Helm chart | ✅ |
+| Hardening | JWT auth, rate limiting, RTSP encryption, camera hot-reload | ✅ |
+| Ops | Model auto-download, n8n workflows, integration tests | ✅ |
 
 ## Further Reading
 
