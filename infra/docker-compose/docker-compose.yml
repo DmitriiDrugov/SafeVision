@@ -396,8 +396,8 @@ services:
   # ─── M5: Web / Config UI ─────────────────────────────────────────────────
   web:
     build:
-      context: ../..
-      dockerfile: web/app/Dockerfile
+      context: ../../web/app
+      dockerfile: Dockerfile
     restart: unless-stopped
     environment:
       NEXT_PUBLIC_API_URL: "http://incident:8004"
