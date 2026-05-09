@@ -9,7 +9,6 @@ description = "SafeVision Redis Stream event payload models"
 requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2.0",
-    "safevision-schemas @ file://../schemas",
 ]
 
 [tool.hatch.build.targets.wheel]

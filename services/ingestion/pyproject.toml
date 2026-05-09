@@ -15,10 +15,7 @@ dependencies = [
     "prometheus-client>=0.20",
     "opentelemetry-sdk>=1.23",
     "opentelemetry-exporter-otlp>=1.23",
-    "pydantic>=2.0",
-    "safevision-schemas @ file://../../shared/schemas",
-    "safevision-proto @ file://../../shared/proto",
-]
+    "pydantic>=2.0",]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "pytest-mock>=3.12"]

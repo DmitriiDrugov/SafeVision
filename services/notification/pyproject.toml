@@ -17,10 +17,7 @@ dependencies = [
     "opentelemetry-sdk>=1.23",
     "opentelemetry-exporter-otlp>=1.23",
     "pydantic>=2.0",
-    "pydantic-settings>=2.0",
-    "safevision-schemas @ file://../../shared/schemas",
-    "safevision-proto @ file://../../shared/proto",
-]
+    "pydantic-settings>=2.0",]
 
 [project.optional-dependencies]
 dev = [

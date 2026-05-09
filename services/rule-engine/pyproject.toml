@@ -18,10 +18,7 @@ dependencies = [
     "opentelemetry-sdk>=1.23",
     "opentelemetry-exporter-otlp>=1.23",
     "watchdog>=4.0",
-    "PyJWT>=2.8",
-    "safevision-schemas @ file://../../shared/schemas",
-    "safevision-proto @ file://../../shared/proto",
-]
+    "PyJWT>=2.8",]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "pytest-mock>=3.12"]
