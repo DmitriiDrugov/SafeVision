@@ -14,17 +14,16 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
+import bcrypt
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from passlib.context import CryptContext
 from pydantic import BaseModel
 
 _SECRET_KEY: str = os.environ.get("SECRET_KEY", "change-me-in-production-use-a-long-random-string")
 _ALGORITHM = "HS256"
 _TOKEN_EXPIRE_HOURS = int(os.environ.get("JWT_EXPIRE_HOURS", "24"))
 
-_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 _bearer = HTTPBearer(auto_error=False)
 
 
@@ -33,22 +32,30 @@ class UserInfo(BaseModel):
     role: str
 
 
-def _load_users() -> dict[str, tuple[str, str]]:
+def _hash_password(password: str) -> bytes:
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+
+
+def _verify_password(password: str, hashed: bytes) -> bool:
+    return bcrypt.checkpw(password.encode(), hashed)
+
+
+def _load_users() -> dict[str, tuple[bytes, str]]:
     """Return {username: (bcrypt_hash, role)} from AUTH_USERS env var."""
     raw = os.environ.get("AUTH_USERS", "admin:changeme:admin")
-    users: dict[str, tuple[str, str]] = {}
+    users: dict[str, tuple[bytes, str]] = {}
     for entry in raw.split(","):
         parts = entry.strip().split(":", 2)
         if len(parts) == 3:
             username, password, role = parts
             users[username.strip()] = (
-                _pwd_context.hash(password.strip()),
+                _hash_password(password.strip()),
                 role.strip(),
             )
     return users
 
 
-_USERS: dict[str, tuple[str, str]] = _load_users()
+_USERS: dict[str, tuple[bytes, str]] = _load_users()
 
 
 def authenticate_user(username: str, password: str) -> UserInfo | None:
@@ -56,7 +63,7 @@ def authenticate_user(username: str, password: str) -> UserInfo | None:
     if entry is None:
         return None
     hashed, role = entry
-    if not _pwd_context.verify(password, hashed):
+    if not _verify_password(password, hashed):
         return None
     return UserInfo(username=username, role=role)
 
