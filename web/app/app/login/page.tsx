@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { login } from '@/lib/auth'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const params = useSearchParams()
   const next = params.get('next') ?? '/'
@@ -29,6 +29,58 @@ export default function LoginPage() {
   }
 
   return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-700">
+          Username
+        </label>
+        <input
+          type="text"
+          autoComplete="username"
+          value={form.username}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, username: e.target.value }))
+          }
+          required
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        />
+      </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-700">
+          Password
+        </label>
+        <input
+          type="password"
+          autoComplete="current-password"
+          value={form.password}
+          onChange={(e) =>
+            setForm((f) => ({ ...f, password: e.target.value }))
+          }
+          required
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        />
+      </div>
+
+      {error && (
+        <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      )}
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full rounded-lg bg-blue-600 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+      >
+        {loading ? 'Signing in…' : 'Sign in'}
+      </button>
+    </form>
+  )
+}
+
+export default function LoginPage() {
+  return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100">
       <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-lg">
         <div className="mb-8 text-center">
@@ -40,53 +92,9 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Username
-            </label>
-            <input
-              type="text"
-              autoComplete="username"
-              value={form.username}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, username: e.target.value }))
-              }
-              required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">
-              Password
-            </label>
-            <input
-              type="password"
-              autoComplete="current-password"
-              value={form.password}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, password: e.target.value }))
-              }
-              required
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            />
-          </div>
-
-          {error && (
-            <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-blue-600 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
+        <Suspense fallback={<div className="h-48" />}>
+          <LoginForm />
+        </Suspense>
       </div>
     </div>
   )

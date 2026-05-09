@@ -70,10 +70,11 @@ export default function ZoneEditorPage() {
     zones.forEach((zone, idx) => {
       const color = ZONE_COLORS[idx % ZONE_COLORS.length]
       const pts = zone.polygon.map(([nx, ny]) => [nx * CANVAS_W, ny * CANVAS_H] as Point)
-      if (pts.length < 2) return
+      const first = pts[0]
+      if (!first || pts.length < 2) return
 
       ctx.beginPath()
-      ctx.moveTo(pts[0][0], pts[0][1])
+      ctx.moveTo(first[0], first[1])
       pts.slice(1).forEach(([x, y]) => ctx.lineTo(x, y))
       ctx.closePath()
       ctx.fillStyle = color + '33' // 20% opacity
@@ -102,8 +103,10 @@ export default function ZoneEditorPage() {
     // Draw in-progress draft
     if (draft && draft.vertices.length > 0) {
       const pts = draft.vertices.map(([nx, ny]) => [nx * CANVAS_W, ny * CANVAS_H] as Point)
+      const first = pts[0]
+      if (!first) return
       ctx.beginPath()
-      ctx.moveTo(pts[0][0], pts[0][1])
+      ctx.moveTo(first[0], first[1])
       pts.slice(1).forEach(([x, y]) => ctx.lineTo(x, y))
       ctx.strokeStyle = '#1d4ed8'
       ctx.lineWidth = 2
@@ -142,7 +145,9 @@ export default function ZoneEditorPage() {
     }
 
     // Click near first vertex → close polygon
-    const [fx, fy] = draft.vertices[0]
+    const first = draft.vertices[0]
+    if (!first) return
+    const [fx, fy] = first
     const distPx = Math.hypot((nx - fx) * CANVAS_W, (ny - fy) * CANVAS_H)
     if (draft.vertices.length >= 3 && distPx < 12) {
       setDraft((d) => d && { ...d, closed: true })

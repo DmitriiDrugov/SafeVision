@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   // Required for the multi-stage Docker build (server.js entry point).
   output: 'standalone',
 
+  // Lint runs in CI; skipping it during `next build` keeps Docker builds fast
+  // and prevents stylistic warnings from blocking image creation.
+  eslint: { ignoreDuringBuilds: true },
+
   // TODO: Configure API proxy rewrites once backend services are deployed:
   // async rewrites() {
   //   return [
