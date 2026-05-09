@@ -1,0 +1,15 @@
+# Rule: alert when a person is detected without a helmet.
+# With the base YOLOv8n model (no PPE training), this fires for every person
+# because no helmet detections overlap any person bbox. Replace with a
+# PPE-trained model to get accurate results.
+rule:
+  name: no_helmet_site
+  zone: site
+  condition:
+    object: person
+    missing_ppe: helmet
+  action:
+    type: alert
+    severity: high
+    channel: dashboard
+  enabled: true

@@ -1,0 +1,13 @@
+# Rule: alert when a person is detected without a safety vest.
+# Same note as no_helmet.yaml — fires for every person with base YOLOv8n.
+rule:
+  name: no_vest_site
+  zone: site
+  condition:
+    object: person
+    missing_ppe: vest
+  action:
+    type: alert
+    severity: high
+    channel: dashboard
+  enabled: true
