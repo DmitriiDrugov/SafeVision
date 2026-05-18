@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2,
   ChevronLeft,
@@ -9,84 +9,81 @@ import {
   ImageOff,
   Trash2,
   X,
-} from 'lucide-react'
-import cn from 'clsx'
-import { SeverityBadge } from '@/components/SeverityBadge'
-import { StatusBadge } from '@/components/StatusBadge'
-import {
-  useIncidentsStore,
-  type DemoIncident,
-} from '@/lib/stores/incidents'
-import type { IncidentStatus, Severity } from '@/lib/api'
+} from "lucide-react";
+import cn from "clsx";
+import { SeverityBadge } from "@/components/SeverityBadge";
+import { StatusBadge } from "@/components/StatusBadge";
+import { useIncidentsStore, type DemoIncident } from "@/lib/stores/incidents";
+import type { IncidentStatus, Severity } from "@/lib/api";
 
-const PAGE_SIZE = 25
+const PAGE_SIZE = 25;
 
-const SEVERITIES: Array<{ value: Severity | ''; label: string }> = [
-  { value: '', label: 'All severities' },
-  { value: 'critical', label: 'Critical' },
-  { value: 'high', label: 'High' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'low', label: 'Low' },
-]
+const SEVERITIES: Array<{ value: Severity | ""; label: string }> = [
+  { value: "", label: "All severities" },
+  { value: "critical", label: "Critical" },
+  { value: "high", label: "High" },
+  { value: "medium", label: "Medium" },
+  { value: "low", label: "Low" },
+];
 
-const STATUSES: Array<{ value: IncidentStatus | ''; label: string }> = [
-  { value: '', label: 'All statuses' },
-  { value: 'open', label: 'Open' },
-  { value: 'acknowledged', label: 'Acknowledged' },
-  { value: 'resolved', label: 'Resolved' },
-  { value: 'false_positive', label: 'False positive' },
-]
+const STATUSES: Array<{ value: IncidentStatus | ""; label: string }> = [
+  { value: "", label: "All statuses" },
+  { value: "open", label: "Open" },
+  { value: "acknowledged", label: "Acknowledged" },
+  { value: "resolved", label: "Resolved" },
+  { value: "false_positive", label: "False positive" },
+];
 
 export default function IncidentsPage(): React.ReactElement {
-  const incidents = useIncidentsStore((s) => s.incidents)
-  const setStatus = useIncidentsStore((s) => s.setStatus)
-  const remove = useIncidentsStore((s) => s.remove)
-  const loadThumbnail = useIncidentsStore((s) => s.loadThumbnail)
-  const clear = useIncidentsStore((s) => s.clear)
+  const incidents = useIncidentsStore((s) => s.incidents);
+  const setStatus = useIncidentsStore((s) => s.setStatus);
+  const remove = useIncidentsStore((s) => s.remove);
+  const loadThumbnail = useIncidentsStore((s) => s.loadThumbnail);
+  const clear = useIncidentsStore((s) => s.clear);
 
-  const [filterSeverity, setFilterSeverity] = useState<Severity | ''>('')
-  const [filterStatus, setFilterStatus] = useState<IncidentStatus | ''>('')
-  const [filterCamera, setFilterCamera] = useState('')
-  const [page, setPage] = useState(0)
-  const [selected, setSelected] = useState<DemoIncident | null>(null)
-  const [thumbUrl, setThumbUrl] = useState<string | null>(null)
-
-  useEffect(() => {
-    setPage(0)
-  }, [filterSeverity, filterStatus, filterCamera])
+  const [filterSeverity, setFilterSeverity] = useState<Severity | "">("");
+  const [filterStatus, setFilterStatus] = useState<IncidentStatus | "">("");
+  const [filterCamera, setFilterCamera] = useState("");
+  const [page, setPage] = useState(0);
+  const [selected, setSelected] = useState<DemoIncident | null>(null);
+  const [thumbUrl, setThumbUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    setThumbUrl(null)
-    if (!selected) return
-    let revoke: string | null = null
+    setPage(0);
+  }, [filterSeverity, filterStatus, filterCamera]);
+
+  useEffect(() => {
+    setThumbUrl(null);
+    if (!selected) return;
+    let revoke: string | null = null;
     void loadThumbnail(selected.id).then((url) => {
       if (url) {
-        revoke = url
-        setThumbUrl(url)
+        revoke = url;
+        setThumbUrl(url);
       }
-    })
+    });
     return (): void => {
-      if (revoke) URL.revokeObjectURL(revoke)
-    }
-  }, [selected, loadThumbnail])
+      if (revoke) URL.revokeObjectURL(revoke);
+    };
+  }, [selected, loadThumbnail]);
 
   const filtered = useMemo(() => {
     return incidents.filter((i) => {
-      if (filterSeverity && i.severity !== filterSeverity) return false
-      if (filterStatus && i.status !== filterStatus) return false
+      if (filterSeverity && i.severity !== filterSeverity) return false;
+      if (filterStatus && i.status !== filterStatus) return false;
       if (
         filterCamera &&
         !`${i.camera_id} ${i.cameraName}`
           .toLowerCase()
           .includes(filterCamera.toLowerCase())
       )
-        return false
-      return true
-    })
-  }, [incidents, filterSeverity, filterStatus, filterCamera])
+        return false;
+      return true;
+    });
+  }, [incidents, filterSeverity, filterStatus, filterCamera]);
 
-  const pageRows = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const pageRows = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
 
   return (
     <div className="space-y-4">
@@ -101,8 +98,8 @@ export default function IncidentsPage(): React.ReactElement {
         {incidents.length > 0 && (
           <button
             onClick={() => {
-              if (confirm('Delete all incidents from this browser?'))
-                void clear()
+              if (confirm("Delete all incidents from this browser?"))
+                void clear();
             }}
             className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-2.5 py-1.5 text-xs text-ink-300 hover:bg-white/5 hover:text-white"
           >
@@ -117,7 +114,9 @@ export default function IncidentsPage(): React.ReactElement {
         <Filter className="h-3.5 w-3.5 text-ink-500" />
         <select
           value={filterSeverity}
-          onChange={(e) => { setFilterSeverity(e.target.value as Severity | ''); }}
+          onChange={(e) => {
+            setFilterSeverity(e.target.value as Severity | "");
+          }}
           className="surface-input rounded-md px-2 py-1 text-xs"
         >
           {SEVERITIES.map((s) => (
@@ -128,9 +127,9 @@ export default function IncidentsPage(): React.ReactElement {
         </select>
         <select
           value={filterStatus}
-          onChange={(e) =>
-            { setFilterStatus(e.target.value as IncidentStatus | ''); }
-          }
+          onChange={(e) => {
+            setFilterStatus(e.target.value as IncidentStatus | "");
+          }}
           className="surface-input rounded-md px-2 py-1 text-xs"
         >
           {STATUSES.map((s) => (
@@ -143,7 +142,9 @@ export default function IncidentsPage(): React.ReactElement {
           type="text"
           placeholder="Camera name or ID"
           value={filterCamera}
-          onChange={(e) => { setFilterCamera(e.target.value); }}
+          onChange={(e) => {
+            setFilterCamera(e.target.value);
+          }}
           className="surface-input rounded-md px-2 py-1 text-xs"
         />
       </div>
@@ -183,7 +184,7 @@ export default function IncidentsPage(): React.ReactElement {
                   </td>
                   <td className="px-3 py-2 text-ink-300">{inc.cameraName}</td>
                   <td className="px-3 py-2 text-ink-400 font-mono text-xs">
-                    {inc.zone_id || '—'}
+                    {inc.zone_id || "—"}
                   </td>
                   <td className="px-3 py-2">
                     <SeverityBadge severity={inc.severity} />
@@ -196,7 +197,9 @@ export default function IncidentsPage(): React.ReactElement {
                   </td>
                   <td className="px-3 py-2 text-right">
                     <button
-                      onClick={() => { setSelected(inc); }}
+                      onClick={() => {
+                        setSelected(inc);
+                      }}
                       className="text-xs text-accent hover:underline"
                     >
                       Detail
@@ -217,12 +220,12 @@ export default function IncidentsPage(): React.ReactElement {
         <div className="flex gap-1">
           <button
             disabled={page === 0}
-            onClick={() => { setPage((p) => p - 1); }}
+            onClick={() => {
+              setPage((p) => p - 1);
+            }}
             className={cn(
-              'inline-flex items-center gap-1 rounded-md border border-white/10 px-2 py-1',
-              page === 0
-                ? 'opacity-40'
-                : 'hover:bg-white/5 hover:text-white',
+              "inline-flex items-center gap-1 rounded-md border border-white/10 px-2 py-1",
+              page === 0 ? "opacity-40" : "hover:bg-white/5 hover:text-white",
             )}
           >
             <ChevronLeft className="h-3.5 w-3.5" />
@@ -230,12 +233,14 @@ export default function IncidentsPage(): React.ReactElement {
           </button>
           <button
             disabled={page >= totalPages - 1}
-            onClick={() => { setPage((p) => p + 1); }}
+            onClick={() => {
+              setPage((p) => p + 1);
+            }}
             className={cn(
-              'inline-flex items-center gap-1 rounded-md border border-white/10 px-2 py-1',
+              "inline-flex items-center gap-1 rounded-md border border-white/10 px-2 py-1",
               page >= totalPages - 1
-                ? 'opacity-40'
-                : 'hover:bg-white/5 hover:text-white',
+                ? "opacity-40"
+                : "hover:bg-white/5 hover:text-white",
             )}
           >
             Next
@@ -248,12 +253,16 @@ export default function IncidentsPage(): React.ReactElement {
       {selected && (
         <div
           className="fixed inset-0 z-50 flex justify-end"
-          onClick={() => { setSelected(null); }}
+          onClick={() => {
+            setSelected(null);
+          }}
         >
           <div className="flex-1 bg-ink-950/70 backdrop-blur-sm" />
           <aside
             className="flex h-full w-full max-w-md flex-col border-l border-white/10 bg-ink-900 shadow-panel"
-            onClick={(e) => { e.stopPropagation(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
           >
             <header className="flex items-center justify-between border-b border-white/5 px-5 py-3">
               <div>
@@ -265,7 +274,9 @@ export default function IncidentsPage(): React.ReactElement {
                 </div>
               </div>
               <button
-                onClick={() => { setSelected(null); }}
+                onClick={() => {
+                  setSelected(null);
+                }}
                 className="rounded p-1 text-ink-400 hover:bg-white/5 hover:text-white"
               >
                 <X className="h-4 w-4" />
@@ -290,7 +301,7 @@ export default function IncidentsPage(): React.ReactElement {
 
               <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">
                 <Field label="Camera" value={selected.cameraName} />
-                <Field label="Zone" value={selected.zone_id || '—'} />
+                <Field label="Zone" value={selected.zone_id || "—"} />
                 <Field
                   label="Severity"
                   value={<SeverityBadge severity={selected.severity} />}
@@ -305,7 +316,7 @@ export default function IncidentsPage(): React.ReactElement {
                 />
                 <Field
                   label="Acked by"
-                  value={selected.acknowledged_by ?? '—'}
+                  value={selected.acknowledged_by ?? "—"}
                 />
               </dl>
 
@@ -330,21 +341,21 @@ export default function IncidentsPage(): React.ReactElement {
             </div>
 
             <footer className="flex flex-wrap gap-2 border-t border-white/5 px-5 py-3">
-              {selected.status === 'open' && (
+              {selected.status === "open" && (
                 <>
                   <button
                     onClick={() => {
-                      setStatus(selected.id, 'acknowledged', 'operator')
+                      setStatus(selected.id, "acknowledged", "operator");
                       setSelected((s) =>
                         s
                           ? {
                               ...s,
-                              status: 'acknowledged',
-                              acknowledged_by: 'operator',
+                              status: "acknowledged",
+                              acknowledged_by: "operator",
                               acknowledged_at: new Date().toISOString(),
                             }
                           : s,
-                      )
+                      );
                     }}
                     className="inline-flex items-center gap-1.5 rounded-md bg-severity-medium/15 px-3 py-1.5 text-xs font-medium text-severity-medium hover:bg-severity-medium/25"
                   >
@@ -352,10 +363,10 @@ export default function IncidentsPage(): React.ReactElement {
                   </button>
                   <button
                     onClick={() => {
-                      setStatus(selected.id, 'false_positive')
+                      setStatus(selected.id, "false_positive");
                       setSelected((s) =>
-                        s ? { ...s, status: 'false_positive' } : s,
-                      )
+                        s ? { ...s, status: "false_positive" } : s,
+                      );
                     }}
                     className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-3 py-1.5 text-xs text-ink-200 hover:bg-white/5"
                   >
@@ -363,13 +374,11 @@ export default function IncidentsPage(): React.ReactElement {
                   </button>
                 </>
               )}
-              {selected.status === 'acknowledged' && (
+              {selected.status === "acknowledged" && (
                 <button
                   onClick={() => {
-                    setStatus(selected.id, 'resolved')
-                    setSelected((s) =>
-                      s ? { ...s, status: 'resolved' } : s,
-                    )
+                    setStatus(selected.id, "resolved");
+                    setSelected((s) => (s ? { ...s, status: "resolved" } : s));
                   }}
                   className="inline-flex items-center gap-1.5 rounded-md bg-emerald-400/10 px-3 py-1.5 text-xs font-medium text-emerald-300 hover:bg-emerald-400/20"
                 >
@@ -380,8 +389,8 @@ export default function IncidentsPage(): React.ReactElement {
               <div className="ml-auto" />
               <button
                 onClick={() => {
-                  void remove(selected.id)
-                  setSelected(null)
+                  void remove(selected.id);
+                  setSelected(null);
                 }}
                 className="inline-flex items-center gap-1.5 rounded-md border border-severity-critical/30 px-3 py-1.5 text-xs text-severity-critical hover:bg-severity-critical/10"
               >
@@ -393,15 +402,15 @@ export default function IncidentsPage(): React.ReactElement {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function Field({
   label,
   value,
 }: {
-  label: string
-  value: React.ReactNode
+  label: string;
+  value: React.ReactNode;
 }): React.ReactElement {
   return (
     <div>
@@ -410,5 +419,5 @@ function Field({
       </dt>
       <dd className="mt-0.5 text-sm text-white">{value}</dd>
     </div>
-  )
+  );
 }

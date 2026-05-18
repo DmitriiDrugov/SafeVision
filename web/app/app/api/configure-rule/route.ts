@@ -1,8 +1,8 @@
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
-const MODEL = 'meta-llama/llama-3.1-8b-instruct'
+const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+const MODEL = "meta-llama/llama-3.1-8b-instruct";
 
 const SYSTEM_PROMPT = `You are SafeVision Rule Assistant. Your job is to convert natural language safety rule descriptions into valid SafeVision YAML.
 
@@ -46,81 +46,85 @@ rule:
   action:
     type: alert
     severity: high
-\`\`\``
+\`\`\``;
 
 interface ChatMessage {
-  role: 'user' | 'assistant'
-  content: string
+  role: "user" | "assistant";
+  content: string;
 }
 
 function extractYaml(text: string): string | null {
-  const match = /```yaml\s*([\s\S]*?)```/.exec(text)
-  return match?.[1]?.trim() ?? null
+  const match = /```yaml\s*([\s\S]*?)```/.exec(text);
+  return match?.[1]?.trim() ?? null;
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  const apiKey = process.env.OPENROUTER_API_KEY
+  const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { message: 'OPENROUTER_API_KEY not configured.', yaml: null, isRule: false },
+      {
+        message: "OPENROUTER_API_KEY not configured.",
+        yaml: null,
+        isRule: false,
+      },
       { status: 503 },
-    )
+    );
   }
 
-  const { messages } = (await req.json()) as { messages: ChatMessage[] }
+  const { messages } = (await req.json()) as { messages: ChatMessage[] };
 
   const response = await fetch(OPENROUTER_API_URL, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://safevision.local',
-      'X-Title': 'SafeVision Config UI',
+      "HTTP-Referer": "https://safevision.local",
+      "X-Title": "SafeVision Config UI",
     },
     body: JSON.stringify({
       model: MODEL,
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: "system", content: SYSTEM_PROMPT },
         ...messages.map((m) => ({ role: m.role, content: m.content })),
       ],
       temperature: 0.2,
       max_tokens: 1024,
     }),
-  })
+  });
 
   if (!response.ok) {
-    const text = await response.text()
+    const text = await response.text();
     return NextResponse.json(
       { message: `LLM error: ${text}`, yaml: null, isRule: false },
       { status: 502 },
-    )
+    );
   }
 
   const data = (await response.json()) as {
-    choices: Array<{ message: { content: string } }>
-  }
+    choices: Array<{ message: { content: string } }>;
+  };
 
-  const assistantText = data.choices[0]?.message.content ?? ''
-  const yaml = extractYaml(assistantText)
+  const assistantText = data.choices[0]?.message.content ?? "";
+  const yaml = extractYaml(assistantText);
   const humanMessage = yaml
-    ? assistantText.replace(/```yaml[\s\S]*?```/, '').trim()
-    : assistantText
+    ? assistantText.replace(/```yaml[\s\S]*?```/, "").trim()
+    : assistantText;
 
   // Validate YAML against Rule Engine if possible (best-effort)
-  let validationError: string | undefined
+  let validationError: string | undefined;
   if (yaml) {
     const rulesApiBase =
-      process.env.NEXT_PUBLIC_RULES_API_URL ?? 'http://localhost:8003'
+      process.env.NEXT_PUBLIC_RULES_API_URL ?? "http://localhost:8003";
     try {
       const validateRes = await fetch(`${rulesApiBase}/api/v1/rules`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ yaml_text: yaml }),
         signal: AbortSignal.timeout(3000),
-      })
+      });
       if (!validateRes.ok && validateRes.status === 422) {
-        const errBody = await validateRes.text()
-        validationError = errBody
+        const errBody = await validateRes.text();
+        validationError = errBody;
       }
     } catch {
       // Rule Engine unreachable — skip server-side validation
@@ -128,9 +132,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   return NextResponse.json({
-    message: humanMessage || (yaml ? 'Rule generated.' : assistantText),
+    message: humanMessage || (yaml ? "Rule generated." : assistantText),
     yaml,
     isRule: yaml !== null && !validationError,
     validationError,
-  })
+  });
 }

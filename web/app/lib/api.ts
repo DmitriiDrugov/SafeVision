@@ -1,19 +1,19 @@
 export const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8004'
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8004";
 
 export const RULES_API_BASE =
-  process.env.NEXT_PUBLIC_RULES_API_URL ?? 'http://localhost:8003'
+  process.env.NEXT_PUBLIC_RULES_API_URL ?? "http://localhost:8003";
 
 /**
  * Read the JWT cookie directly to avoid pulling `lib/auth` (which imports back
  * into this module). Equivalent to `authHeaders()` from `lib/auth.ts`.
  */
 function _authHeaders(): HeadersInit {
-  if (typeof document === 'undefined') return {}
-  const match = /(?:^|; )sv_session=([^;]*)/.exec(document.cookie)
-  if (!match) return {}
+  if (typeof document === "undefined") return {};
+  const match = /(?:^|; )sv_session=([^;]*)/.exec(document.cookie);
+  if (!match) return {};
   // The cookie helper writes the token URL-encoded; mirror that here.
-  return { Authorization: `Bearer ${decodeURIComponent(match[1])}` }
+  return { Authorization: `Bearer ${decodeURIComponent(match[1])}` };
 }
 
 export class ApiError extends Error {
@@ -21,118 +21,118 @@ export class ApiError extends Error {
     public readonly status: number,
     message: string,
   ) {
-    super(message)
-    this.name = 'ApiError'
+    super(message);
+    this.name = "ApiError";
   }
 }
 
 // ── Types (mirror shared/schemas Pydantic models) ──────────────────────────
 
-export type Severity = 'low' | 'medium' | 'high' | 'critical'
+export type Severity = "low" | "medium" | "high" | "critical";
 export type IncidentStatus =
-  | 'open'
-  | 'acknowledged'
-  | 'resolved'
-  | 'false_positive'
+  | "open"
+  | "acknowledged"
+  | "resolved"
+  | "false_positive";
 
 export interface BoundingBox {
-  x1: number
-  y1: number
-  x2: number
-  y2: number
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
 }
 
 export interface TrackedObject {
-  track_id: number
-  class_name: string
-  confidence: number
-  bbox: BoundingBox
-  zone_ids: string[]
-  attributes: Record<string, string>
+  track_id: number;
+  class_name: string;
+  confidence: number;
+  bbox: BoundingBox;
+  zone_ids: string[];
+  attributes: Record<string, string>;
 }
 
 export interface DetectionPayload {
-  camera_id: string
-  frame_id: number
-  timestamp: string
-  objects: TrackedObject[]
+  camera_id: string;
+  frame_id: number;
+  timestamp: string;
+  objects: TrackedObject[];
 }
 
 export interface ViolationEvent {
-  event_id: string
-  rule_name: string
-  camera_id: string
-  zone_id: string
-  severity: Severity
-  detected_at: string
-  detection_payload: DetectionPayload
-  trace_id: string
+  event_id: string;
+  rule_name: string;
+  camera_id: string;
+  zone_id: string;
+  severity: Severity;
+  detected_at: string;
+  detection_payload: DetectionPayload;
+  trace_id: string;
 }
 
 export interface Incident {
-  id: string
-  rule_id: string
-  camera_id: string
-  zone_id: string
-  detected_at: string
-  severity: Severity
-  status: IncidentStatus
-  acknowledged_by: string | null
-  acknowledged_at: string | null
-  clip_url: string | null
-  detection_payload: DetectionPayload | null
+  id: string;
+  rule_id: string;
+  camera_id: string;
+  zone_id: string;
+  detected_at: string;
+  severity: Severity;
+  status: IncidentStatus;
+  acknowledged_by: string | null;
+  acknowledged_at: string | null;
+  clip_url: string | null;
+  detection_payload: DetectionPayload | null;
 }
 
 export interface AuditLogEntry {
-  id: string
-  incident_id: string
-  action: string
-  actor: string
-  note: string | null
-  created_at: string
+  id: string;
+  incident_id: string;
+  action: string;
+  actor: string;
+  note: string | null;
+  created_at: string;
 }
 
 export interface RuleCondition {
-  object: string
-  missing_ppe: string | null
-  action: string | null
-  duration_seconds: number | null
-  min_count: number | null
+  object: string;
+  missing_ppe: string | null;
+  action: string | null;
+  duration_seconds: number | null;
+  min_count: number | null;
 }
 
 export interface RuleAction {
-  type: string
-  severity: Severity
+  type: string;
+  severity: Severity;
 }
 
 export interface Rule {
-  name: string
-  zone: string
-  condition: RuleCondition
-  action: RuleAction
-  enabled: boolean
+  name: string;
+  zone: string;
+  condition: RuleCondition;
+  action: RuleAction;
+  enabled: boolean;
 }
 
 export interface Zone {
-  id: string
-  name: string
-  polygon: [number, number][]
+  id: string;
+  name: string;
+  polygon: [number, number][];
 }
 
 export interface Camera {
-  id: string
-  name: string
-  rtsp_url: string
-  zones: Zone[]
-  enabled: boolean
+  id: string;
+  name: string;
+  rtsp_url: string;
+  zones: Zone[];
+  enabled: boolean;
 }
 
 export interface IncidentListParams {
-  severity?: Severity
-  status?: IncidentStatus
-  camera_id?: string
-  limit?: number
-  offset?: number
+  severity?: Severity;
+  status?: IncidentStatus;
+  camera_id?: string;
+  limit?: number;
+  offset?: number;
 }
 
 // ── Internal fetch helper ──────────────────────────────────────────────────
@@ -144,18 +144,18 @@ async function apiFetch<T>(
 ): Promise<T> {
   const res = await fetch(`${base}${path}`, {
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ..._authHeaders(),
       ...init?.headers,
     },
     ...init,
-  })
+  });
   if (!res.ok) {
-    const text = await res.text().catch(() => res.statusText)
-    throw new ApiError(res.status, text)
+    const text = await res.text().catch(() => res.statusText);
+    throw new ApiError(res.status, text);
   }
-  if (res.status === 204) return undefined as unknown as T
-  return res.json() as Promise<T>
+  if (res.status === 204) return undefined as unknown as T;
+  return res.json() as Promise<T>;
 }
 
 // ── Incident Service ───────────────────────────────────────────────────────
@@ -163,18 +163,18 @@ async function apiFetch<T>(
 export async function getIncidents(
   params: IncidentListParams = {},
 ): Promise<Incident[]> {
-  const qs = new URLSearchParams()
-  if (params.severity) qs.set('severity', params.severity)
-  if (params.status) qs.set('status', params.status)
-  if (params.camera_id) qs.set('camera_id', params.camera_id)
-  if (params.limit !== undefined) qs.set('limit', String(params.limit))
-  if (params.offset !== undefined) qs.set('offset', String(params.offset))
-  const query = qs.toString() ? `?${qs.toString()}` : ''
-  return apiFetch<Incident[]>(API_BASE, `/api/v1/incidents${query}`)
+  const qs = new URLSearchParams();
+  if (params.severity) qs.set("severity", params.severity);
+  if (params.status) qs.set("status", params.status);
+  if (params.camera_id) qs.set("camera_id", params.camera_id);
+  if (params.limit !== undefined) qs.set("limit", String(params.limit));
+  if (params.offset !== undefined) qs.set("offset", String(params.offset));
+  const query = qs.toString() ? `?${qs.toString()}` : "";
+  return apiFetch<Incident[]>(API_BASE, `/api/v1/incidents${query}`);
 }
 
 export async function getIncident(id: string): Promise<Incident> {
-  return apiFetch<Incident>(API_BASE, `/api/v1/incidents/${id}`)
+  return apiFetch<Incident>(API_BASE, `/api/v1/incidents/${id}`);
 }
 
 export async function acknowledgeIncident(
@@ -183,9 +183,9 @@ export async function acknowledgeIncident(
   note?: string,
 ): Promise<Incident> {
   return apiFetch<Incident>(API_BASE, `/api/v1/incidents/${id}/acknowledge`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify({ actor, note }),
-  })
+  });
 }
 
 export async function resolveIncident(
@@ -194,17 +194,17 @@ export async function resolveIncident(
   note?: string,
 ): Promise<Incident> {
   return apiFetch<Incident>(API_BASE, `/api/v1/incidents/${id}/resolve`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify({ actor, note }),
-  })
+  });
 }
 
 export async function markFalsePositive(id: string): Promise<Incident> {
   return apiFetch<Incident>(
     API_BASE,
     `/api/v1/incidents/${id}/false-positive`,
-    { method: 'POST' },
-  )
+    { method: "POST" },
+  );
 }
 
 export async function getEvidenceUrl(
@@ -213,24 +213,24 @@ export async function getEvidenceUrl(
   return apiFetch<{ url: string; expires_at: string }>(
     API_BASE,
     `/api/v1/incidents/${id}/evidence`,
-  )
+  );
 }
 
 export async function getAuditLog(id: string): Promise<AuditLogEntry[]> {
-  return apiFetch<AuditLogEntry[]>(API_BASE, `/api/v1/incidents/${id}/audit`)
+  return apiFetch<AuditLogEntry[]>(API_BASE, `/api/v1/incidents/${id}/audit`);
 }
 
 // ── Rule Engine ────────────────────────────────────────────────────────────
 
 export async function getRules(): Promise<Rule[]> {
-  return apiFetch<Rule[]>(RULES_API_BASE, '/api/v1/rules')
+  return apiFetch<Rule[]>(RULES_API_BASE, "/api/v1/rules");
 }
 
 export async function createRule(yamlText: string): Promise<Rule> {
-  return apiFetch<Rule>(RULES_API_BASE, '/api/v1/rules', {
-    method: 'POST',
+  return apiFetch<Rule>(RULES_API_BASE, "/api/v1/rules", {
+    method: "POST",
     body: JSON.stringify({ yaml_text: yamlText }),
-  })
+  });
 }
 
 export async function updateRule(
@@ -241,59 +241,70 @@ export async function updateRule(
     RULES_API_BASE,
     `/api/v1/rules/${encodeURIComponent(name)}`,
     {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify(body),
     },
-  )
+  );
 }
 
 export async function deleteRule(name: string): Promise<void> {
   return apiFetch<undefined>(
     RULES_API_BASE,
     `/api/v1/rules/${encodeURIComponent(name)}`,
-    { method: 'DELETE' },
-  )
+    { method: "DELETE" },
+  );
 }
 
 // ── Cameras (via Incident Service) ────────────────────────────────────────
 
 export async function getCameras(): Promise<Camera[]> {
-  return apiFetch<Camera[]>(API_BASE, '/api/v1/cameras')
+  return apiFetch<Camera[]>(API_BASE, "/api/v1/cameras");
 }
 
 export async function getCamera(id: string): Promise<Camera> {
-  return apiFetch<Camera>(API_BASE, `/api/v1/cameras/${encodeURIComponent(id)}`)
+  return apiFetch<Camera>(
+    API_BASE,
+    `/api/v1/cameras/${encodeURIComponent(id)}`,
+  );
 }
 
 export interface CameraIn {
-  id: string
-  name: string
-  rtsp_url: string
-  enabled?: boolean
-  zones?: Zone[]
+  id: string;
+  name: string;
+  rtsp_url: string;
+  enabled?: boolean;
+  zones?: Zone[];
 }
 
 export async function createCamera(body: CameraIn): Promise<Camera> {
-  return apiFetch<Camera>(API_BASE, '/api/v1/cameras', {
-    method: 'POST',
+  return apiFetch<Camera>(API_BASE, "/api/v1/cameras", {
+    method: "POST",
     body: JSON.stringify(body),
-  })
+  });
 }
 
 export async function updateCamera(
   id: string,
   body: Partial<CameraIn>,
 ): Promise<Camera> {
-  return apiFetch<Camera>(API_BASE, `/api/v1/cameras/${encodeURIComponent(id)}`, {
-    method: 'PUT',
-    body: JSON.stringify(body),
-  })
+  return apiFetch<Camera>(
+    API_BASE,
+    `/api/v1/cameras/${encodeURIComponent(id)}`,
+    {
+      method: "PUT",
+      body: JSON.stringify(body),
+    },
+  );
 }
 
 export async function deleteCamera(id: string): Promise<void> {
-  return apiFetch<undefined>(API_BASE, `/api/v1/cameras/${encodeURIComponent(id)}`, {
-    method: 'DELETE',
-  })
+  return apiFetch<undefined>(
+    API_BASE,
+    `/api/v1/cameras/${encodeURIComponent(id)}`,
+    {
+      method: "DELETE",
+    },
+  );
 }
 
 export async function updateCameraZones(
@@ -304,8 +315,8 @@ export async function updateCameraZones(
     API_BASE,
     `/api/v1/cameras/${encodeURIComponent(id)}/zones`,
     {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(zones),
     },
-  )
+  );
 }

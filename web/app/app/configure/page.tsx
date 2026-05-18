@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Bot,
   CornerDownLeft,
@@ -9,152 +9,148 @@ import {
   Sparkles,
   User,
   WandSparkles,
-} from 'lucide-react'
-import jsYaml from 'js-yaml'
-import { useRulesStore, type DemoRuleConditionType } from '@/lib/stores/rules'
-import type { Severity } from '@/lib/api'
+} from "lucide-react";
+import jsYaml from "js-yaml";
+import { useRulesStore, type DemoRuleConditionType } from "@/lib/stores/rules";
+import type { Severity } from "@/lib/api";
 
 interface Message {
-  role: 'user' | 'assistant'
-  content: string
-  yaml?: string
+  role: "user" | "assistant";
+  content: string;
+  yaml?: string;
 }
 
-const MAX_HISTORY = 10
+const MAX_HISTORY = 10;
 
 const STARTER_PROMPTS = [
-  'Alert if more than 3 people gather in the loading bay.',
-  'Detect any vehicle inside the pedestrian corridor.',
-  'Flag a person standing near the forklift zone for more than 5 seconds.',
-]
+  "Alert if more than 3 people gather in the loading bay.",
+  "Detect any vehicle inside the pedestrian corridor.",
+  "Flag a person standing near the forklift zone for more than 5 seconds.",
+];
 
 interface BackendYamlRule {
   rule: {
-    name?: string
-    zone?: string
-    enabled?: boolean
+    name?: string;
+    zone?: string;
+    enabled?: boolean;
     condition?: {
-      object?: string
-      missing_ppe?: string
-      min_count?: number
-      duration_seconds?: number
-    }
+      object?: string;
+      missing_ppe?: string;
+      min_count?: number;
+      duration_seconds?: number;
+    };
     action?: {
-      severity?: Severity
-    }
-  }
+      severity?: Severity;
+    };
+  };
 }
 
 /** Best-effort mapping from server-style YAML to a browser DemoRule. */
-function ingestYaml(yaml: string):
-  | {
-      name: string
-      type: DemoRuleConditionType
-      minCount: number
-      durationSeconds: number
-      severity: Severity
-    }
-  | null {
+function ingestYaml(yaml: string): {
+  name: string;
+  type: DemoRuleConditionType;
+  minCount: number;
+  durationSeconds: number;
+  severity: Severity;
+} | null {
   try {
-    const parsed = jsYaml.load(yaml) as BackendYamlRule | null
-    const r = parsed?.rule
-    if (!r) return null
-    const object = r.condition?.object ?? 'person'
-    const min = Number(r.condition?.min_count ?? 1)
-    let type: DemoRuleConditionType = 'person_in_zone'
-    if (object === 'vehicle') type = 'vehicle_in_pedestrian_zone'
-    else if (min >= 2) type = 'crowd'
+    const parsed = jsYaml.load(yaml) as BackendYamlRule | null;
+    const r = parsed?.rule;
+    if (!r) return null;
+    const object = r.condition?.object ?? "person";
+    const min = Number(r.condition?.min_count ?? 1);
+    let type: DemoRuleConditionType = "person_in_zone";
+    if (object === "vehicle") type = "vehicle_in_pedestrian_zone";
+    else if (min >= 2) type = "crowd";
     return {
-      name: r.name ?? 'imported_rule',
+      name: r.name ?? "imported_rule",
       type,
       minCount: Math.max(1, min),
       durationSeconds: Number(r.condition?.duration_seconds ?? 1),
-      severity: (r.action?.severity ?? 'medium'),
-    }
+      severity: r.action?.severity ?? "medium",
+    };
   } catch {
-    return null
+    return null;
   }
 }
 
 export default function ConfigurePage(): React.ReactElement {
-  const router = useRouter()
-  const addRule = useRulesStore((s) => s.add)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const router = useRouter();
+  const addRule = useRulesStore((s) => s.add);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const [messages, setMessages] = useState<Message[]>([
     {
-      role: 'assistant',
+      role: "assistant",
       content:
-        'Describe a safety condition in plain language. I will draft a rule and you can install it with one click. Try one of the suggestions below or type your own.',
+        "Describe a safety condition in plain language. I will draft a rule and you can install it with one click. Try one of the suggestions below or type your own.",
     },
-  ])
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [pendingYaml, setPendingYaml] = useState<string | null>(null)
-  const [llmError, setLlmError] = useState<string | null>(null)
+  ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [pendingYaml, setPendingYaml] = useState<string | null>(null);
+  const [llmError, setLlmError] = useState<string | null>(null);
 
   const send = async (textOverride?: string): Promise<void> => {
-    const text = (textOverride ?? input).trim()
-    if (!text || loading) return
+    const text = (textOverride ?? input).trim();
+    if (!text || loading) return;
 
-    const history: Message[] = [
-      ...messages,
-      { role: 'user', content: text },
-    ]
-    setMessages(history)
-    setInput('')
-    setPendingYaml(null)
-    setLlmError(null)
-    setLoading(true)
+    const history: Message[] = [...messages, { role: "user", content: text }];
+    setMessages(history);
+    setInput("");
+    setPendingYaml(null);
+    setLlmError(null);
+    setLoading(true);
 
     try {
-      const res = await fetch('/api/configure-rule', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/configure-rule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: history.slice(-MAX_HISTORY) }),
-      })
+      });
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as {
-          message?: string
-        }
-        const errMessage = data.message ?? `LLM error (HTTP ${String(res.status)})`
+          message?: string;
+        };
+        const errMessage =
+          data.message ?? `LLM error (HTTP ${String(res.status)})`;
         if (res.status === 503) {
           setLlmError(
-            'Rule Builder is offline — OPENROUTER_API_KEY is not set on this deployment. Try the manual rule editor on the Rules page.',
-          )
+            "Rule Builder is offline — OPENROUTER_API_KEY is not set on this deployment. Try the manual rule editor on the Rules page.",
+          );
         } else {
-          setLlmError(errMessage)
+          setLlmError(errMessage);
         }
-        return
+        return;
       }
       const data = (await res.json()) as {
-        message: string
-        yaml: string | null
-        isRule: boolean
-      }
+        message: string;
+        yaml: string | null;
+        isRule: boolean;
+      };
       const reply: Message = {
-        role: 'assistant',
-        content: data.message || 'Generated rule:',
+        role: "assistant",
+        content: data.message || "Generated rule:",
         yaml: data.yaml ?? undefined,
-      }
-      setMessages((prev) => [...prev, reply])
-      if (data.isRule && data.yaml) setPendingYaml(data.yaml)
+      };
+      setMessages((prev) => [...prev, reply]);
+      if (data.isRule && data.yaml) setPendingYaml(data.yaml);
     } catch (e) {
-      setLlmError(e instanceof Error ? e.message : 'Request failed')
+      setLlmError(e instanceof Error ? e.message : "Request failed");
     } finally {
-      setLoading(false)
-      inputRef.current?.focus()
+      setLoading(false);
+      inputRef.current?.focus();
     }
-  }
+  };
 
   const install = (): void => {
-    if (!pendingYaml) return
-    const parsed = ingestYaml(pendingYaml)
+    if (!pendingYaml) return;
+    const parsed = ingestYaml(pendingYaml);
     if (!parsed) {
       setLlmError(
-        'Could not parse the generated YAML for browser-side use. You can still copy and adapt it manually.',
-      )
-      return
+        "Could not parse the generated YAML for browser-side use. You can still copy and adapt it manually.",
+      );
+      return;
     }
     addRule({
       name: parsed.name,
@@ -163,9 +159,9 @@ export default function ConfigurePage(): React.ReactElement {
       durationSeconds: parsed.durationSeconds,
       severity: parsed.severity,
       description: `Imported from rule builder.`,
-    })
-    router.push('/rules')
-  }
+    });
+    router.push("/rules");
+  };
 
   return (
     <div className="grid h-[calc(100vh-3.5rem-3rem)] grid-cols-1 gap-4 lg:grid-cols-[1fr_360px]">
@@ -210,11 +206,13 @@ export default function ConfigurePage(): React.ReactElement {
             <textarea
               ref={inputRef}
               value={input}
-              onChange={(e) => { setInput(e.target.value); }}
+              onChange={(e) => {
+                setInput(e.target.value);
+              }}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  void send()
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void send();
                 }
               }}
               rows={2}
@@ -265,25 +263,27 @@ export default function ConfigurePage(): React.ReactElement {
         )}
       </aside>
     </div>
-  )
+  );
 }
 
 function MessageBubble({ message }: { message: Message }): React.ReactElement {
-  const isUser = message.role === 'user'
+  const isUser = message.role === "user";
   return (
-    <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+    <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
       <div
         className={`grid h-7 w-7 shrink-0 place-items-center rounded-md ${
-          isUser ? 'bg-white/10 text-ink-200' : 'bg-accent/15 text-accent'
+          isUser ? "bg-white/10 text-ink-200" : "bg-accent/15 text-accent"
         }`}
       >
-        {isUser ? <User className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
+        {isUser ? (
+          <User className="h-3.5 w-3.5" />
+        ) : (
+          <Bot className="h-3.5 w-3.5" />
+        )}
       </div>
       <div
         className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-          isUser
-            ? 'bg-accent/15 text-ink-100'
-            : 'bg-white/5 text-ink-100'
+          isUser ? "bg-accent/15 text-ink-100" : "bg-white/5 text-ink-100"
         }`}
       >
         <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
@@ -294,5 +294,5 @@ function MessageBubble({ message }: { message: Message }): React.ReactElement {
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -1,10 +1,28 @@
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-select = ["E", "F", "I", "N", "W", "UP"]
-ignore = []
 
-[tool.ruff.isort]
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = [
+    # `str + Enum` is intentional — Pydantic v2 still serializes these
+    # uniformly, and migrating to `enum.StrEnum` would change the JSON
+    # representation in subtle ways.
+    "UP042",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# conftest.py manipulates sys.path before importing the modules under test —
+# imports cannot live at the top of the file.
+"**/conftest.py" = ["E402"]
+# Test factories conventionally name `MockReader`-style locals with PascalCase
+# because they're class-like constructors.
+"**/tests/**" = ["N806"]
+# OpenTelemetry is an optional dependency; the forward reference is gated by a
+# runtime import inside the function body.
+"shared/proto/proto/otel.py" = ["F821"]
+
+[tool.ruff.lint.isort]
 known-first-party = ["shared", "ingestion", "inference", "rule_engine", "incident"]
 
 [tool.mypy]

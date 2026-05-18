@@ -1,36 +1,39 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { Bell, CircleDot, Cpu, Search } from 'lucide-react'
-import cn from 'clsx'
-import { useIncidentsStore } from '@/lib/stores/incidents'
-import { useCamerasStore } from '@/lib/stores/cameras'
-import { isDemoMode } from '@/lib/env'
+import { useEffect, useState } from "react";
+import { Bell, CircleDot, Cpu, Search } from "lucide-react";
+import cn from "clsx";
+import { useIncidentsStore } from "@/lib/stores/incidents";
+import { useCamerasStore } from "@/lib/stores/cameras";
+import { isDemoMode } from "@/lib/env";
 
 export default function TopBar() {
-  const openIncidents = useIncidentsStore((s) =>
-    s.incidents.filter((i) => i.status === 'open').length,
-  )
-  const liveCameras = useCamerasStore((s) =>
-    s.cameras.filter((c) => c.status === 'live').length,
-  )
-  const [now, setNow] = useState<string>('')
+  const openIncidents = useIncidentsStore(
+    (s) => s.incidents.filter((i) => i.status === "open").length,
+  );
+  const liveCameras = useCamerasStore(
+    (s) => s.cameras.filter((c) => c.status === "live").length,
+  );
+  const [now, setNow] = useState<string>("");
 
   useEffect(() => {
-    const tick = (): void =>
-      { setNow(
+    const tick = (): void => {
+      setNow(
         new Date().toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
         }),
-      ); }
-    tick()
-    const id = setInterval(tick, 1000)
-    return () => { clearInterval(id); }
-  }, [])
+      );
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => {
+      clearInterval(id);
+    };
+  }, []);
 
-  const demo = isDemoMode()
+  const demo = isDemoMode();
 
   return (
     <header className="flex h-14 items-center gap-4 border-b border-white/5 bg-ink-900/80 px-6 backdrop-blur">
@@ -54,16 +57,16 @@ export default function TopBar() {
         <Stat
           icon={<Cpu className="h-3.5 w-3.5 text-accent" />}
           label="Mode"
-          value={demo ? 'Browser inference' : 'Server inference'}
+          value={demo ? "Browser inference" : "Server inference"}
         />
         <Stat
           icon={
             <Bell
               className={cn(
-                'h-3.5 w-3.5',
+                "h-3.5 w-3.5",
                 openIncidents > 0
-                  ? 'text-severity-critical animate-pulse'
-                  : 'text-ink-400',
+                  ? "text-severity-critical animate-pulse"
+                  : "text-ink-400",
               )}
             />
           }
@@ -75,7 +78,7 @@ export default function TopBar() {
         </div>
       </div>
     </header>
-  )
+  );
 }
 
 function Stat({
@@ -83,9 +86,9 @@ function Stat({
   label,
   value,
 }: {
-  icon: React.ReactNode
-  label: string
-  value: string
+  icon: React.ReactNode;
+  label: string;
+  value: string;
 }): React.ReactElement {
   return (
     <div className="flex items-center gap-1.5">
@@ -93,5 +96,5 @@ function Stat({
       <span className="text-ink-500">{label}</span>
       <span className="font-medium text-white">{value}</span>
     </div>
-  )
+  );
 }

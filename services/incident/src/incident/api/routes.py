@@ -163,7 +163,9 @@ async def acknowledge_incident(
     row.status = "acknowledged"
     row.acknowledged_by = body.actor
     row.acknowledged_at = datetime.now(tz=UTC)
-    await _write_audit(db, incident_id, body.actor, "acknowledge", body.note, before, "acknowledged")
+    await _write_audit(
+        db, incident_id, body.actor, "acknowledge", body.note, before, "acknowledged"
+    )
     await db.commit()
     await db.refresh(row)
     _incident_acked.labels(severity=row.severity).inc()
@@ -202,7 +204,9 @@ async def mark_false_positive(
         )
     before = row.status
     row.status = "false_positive"
-    await _write_audit(db, incident_id, body.actor, "false_positive", body.note, before, "false_positive")
+    await _write_audit(
+        db, incident_id, body.actor, "false_positive", body.note, before, "false_positive"
+    )
     await db.commit()
     await db.refresh(row)
     _incident_fp.labels(severity=row.severity).inc()

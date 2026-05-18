@@ -8,56 +8,56 @@
 
 export interface Detection {
   /** Top-left x, normalized [0..1]. */
-  x: number
+  x: number;
   /** Top-left y, normalized [0..1]. */
-  y: number
+  y: number;
   /** Width, normalized [0..1]. */
-  w: number
+  w: number;
   /** Height, normalized [0..1]. */
-  h: number
-  classId: number
-  className: string
-  score: number
+  h: number;
+  classId: number;
+  className: string;
+  score: number;
 }
 
 export type WorkerInbound =
   | {
-      type: 'init'
-      modelUrl: string
-      wasmPaths: string
+      type: "init";
+      modelUrl: string;
+      wasmPaths: string;
     }
   | {
-      type: 'frame'
+      type: "frame";
       /** OffscreenCanvas with the current video frame already drawn into it. */
-      bitmap: ImageBitmap
+      bitmap: ImageBitmap;
       /** Wall-clock timestamp of the capture (ms). */
-      ts: number
+      ts: number;
       /** Source frame dimensions, used to back-project boxes. */
-      srcWidth: number
-      srcHeight: number
+      srcWidth: number;
+      srcHeight: number;
     }
   | {
-      type: 'reset'
-    }
+      type: "reset";
+    };
 
 export type WorkerOutbound =
   | {
-      type: 'progress'
-      loaded: number
-      total: number
+      type: "progress";
+      loaded: number;
+      total: number;
     }
   | {
-      type: 'ready'
-      inputSize: number
-      backend: string
+      type: "ready";
+      inputSize: number;
+      backend: string;
     }
   | {
-      type: 'result'
-      ts: number
-      detections: Detection[]
-      latencyMs: number
+      type: "result";
+      ts: number;
+      detections: Detection[];
+      latencyMs: number;
     }
   | {
-      type: 'error'
-      message: string
-    }
+      type: "error";
+      message: string;
+    };

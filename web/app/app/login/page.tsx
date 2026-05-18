@@ -1,42 +1,42 @@
-'use client'
+"use client";
 
-import { Suspense, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowRight, Loader2, Radio, ShieldCheck } from 'lucide-react'
-import { login } from '@/lib/auth'
-import { startDemoSession } from '@/lib/demo-auth'
-import { isDemoMode } from '@/lib/env'
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowRight, Loader2, Radio, ShieldCheck } from "lucide-react";
+import { login } from "@/lib/auth";
+import { startDemoSession } from "@/lib/demo-auth";
+import { isDemoMode } from "@/lib/env";
 
 function LoginForm(): React.ReactElement {
-  const router = useRouter()
-  const params = useSearchParams()
-  const next = params.get('next') ?? '/'
-  const demo = isDemoMode()
+  const router = useRouter();
+  const params = useSearchParams();
+  const next = params.get("next") ?? "/";
+  const demo = isDemoMode();
 
-  const [form, setForm] = useState({ username: '', password: '' })
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [form, setForm] = useState({ username: "", password: "" });
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const submit = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
     try {
-      await login(form.username.trim(), form.password)
-      router.push(next)
-      router.refresh()
+      await login(form.username.trim(), form.password);
+      router.push(next);
+      router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      setError(err instanceof Error ? err.message : "Login failed");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const enterDemo = (): void => {
-    startDemoSession('demo', 'admin')
-    router.push(next)
-    router.refresh()
-  }
+    startDemoSession("demo", "admin");
+    router.push(next);
+    router.refresh();
+  };
 
   return (
     <>
@@ -51,8 +51,8 @@ function LoginForm(): React.ReactElement {
               Try the demo
             </div>
             <p className="mt-0.5 text-xs text-ink-300">
-              Skip authentication and open the demo workspace — runs entirely
-              in your browser.
+              Skip authentication and open the demo workspace — runs entirely in
+              your browser.
             </p>
           </div>
           <ArrowRight className="h-4 w-4 text-accent transition-transform group-hover:translate-x-0.5" />
@@ -67,9 +67,9 @@ function LoginForm(): React.ReactElement {
             type="text"
             autoComplete="username"
             value={form.username}
-            onChange={(e) =>
-              { setForm((f) => ({ ...f, username: e.target.value })); }
-            }
+            onChange={(e) => {
+              setForm((f) => ({ ...f, username: e.target.value }));
+            }}
             required
             className="w-full rounded-md surface-input px-3 py-2 text-sm"
           />
@@ -82,9 +82,9 @@ function LoginForm(): React.ReactElement {
             type="password"
             autoComplete="current-password"
             value={form.password}
-            onChange={(e) =>
-              { setForm((f) => ({ ...f, password: e.target.value })); }
-            }
+            onChange={(e) => {
+              setForm((f) => ({ ...f, password: e.target.value }));
+            }}
             required
             className="w-full rounded-md surface-input px-3 py-2 text-sm"
           />
@@ -102,11 +102,11 @@ function LoginForm(): React.ReactElement {
           className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-accent py-2.5 text-sm font-semibold text-ink-950 hover:bg-accent-400 disabled:opacity-50"
         >
           {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-          {loading ? 'Signing in…' : 'Sign in'}
+          {loading ? "Signing in…" : "Sign in"}
         </button>
       </form>
     </>
-  )
+  );
 }
 
 export default function LoginPage(): React.ReactElement {
@@ -132,5 +132,5 @@ export default function LoginPage(): React.ReactElement {
         </Suspense>
       </div>
     </div>
-  )
+  );
 }

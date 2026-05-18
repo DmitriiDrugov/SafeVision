@@ -9,29 +9,29 @@ The same codebase ships **two runtime modes**:
 
 ## Routes
 
-| Path | Purpose |
-|---|---|
-| `/` | Overview — KPI strip, live tiles, activity stream |
-| `/cameras` | Camera grid + QR-pairing modal |
-| `/cameras/[id]/live` | Full-screen live feed + detection overlay + active rules / incidents sidebar |
-| `/cameras/[id]/zones` | Polygon zone editor (overlaid on the camera's last thumbnail) |
-| `/incidents` | Filterable incident list with detail drawer + thumbnails |
-| `/rules` | Browser-side rule editor — create / edit / disable detection rules |
-| `/configure` | Chat-based rule builder via OpenRouter |
-| `/publish/[peer]` | Mobile publisher page — the phone scans the pairing QR and lands here |
-| `/login` | Auth — includes a "Try the demo" skip button when demo mode is on |
+| Path                  | Purpose                                                                      |
+| --------------------- | ---------------------------------------------------------------------------- |
+| `/`                   | Overview — KPI strip, live tiles, activity stream                            |
+| `/cameras`            | Camera grid + QR-pairing modal                                               |
+| `/cameras/[id]/live`  | Full-screen live feed + detection overlay + active rules / incidents sidebar |
+| `/cameras/[id]/zones` | Polygon zone editor (overlaid on the camera's last thumbnail)                |
+| `/incidents`          | Filterable incident list with detail drawer + thumbnails                     |
+| `/rules`              | Browser-side rule editor — create / edit / disable detection rules           |
+| `/configure`          | Chat-based rule builder via OpenRouter                                       |
+| `/publish/[peer]`     | Mobile publisher page — the phone scans the pairing QR and lands here        |
+| `/login`              | Auth — includes a "Try the demo" skip button when demo mode is on            |
 
 ## Environment
 
-| Variable | Default | Description |
-|---|---|---|
-| `NEXT_PUBLIC_DEMO_MODE` | `true` (on Vercel) | Forces demo mode regardless of API URLs |
-| `NEXT_PUBLIC_API_URL` | (empty) | Incident Service base URL (connected mode) |
-| `NEXT_PUBLIC_RULES_API_URL` | (empty) | Rule Engine base URL |
-| `NEXT_PUBLIC_PEER_HOST` | `0.peerjs.com` | PeerJS signaling broker |
-| `NEXT_PUBLIC_PEER_PORT` | `443` | |
-| `NEXT_PUBLIC_PEER_SECURE` | `true` | |
-| `OPENROUTER_API_KEY` | — | Server-side only. Powers `/api/configure-rule`. |
+| Variable                    | Default            | Description                                     |
+| --------------------------- | ------------------ | ----------------------------------------------- |
+| `NEXT_PUBLIC_DEMO_MODE`     | `true` (on Vercel) | Forces demo mode regardless of API URLs         |
+| `NEXT_PUBLIC_API_URL`       | (empty)            | Incident Service base URL (connected mode)      |
+| `NEXT_PUBLIC_RULES_API_URL` | (empty)            | Rule Engine base URL                            |
+| `NEXT_PUBLIC_PEER_HOST`     | `0.peerjs.com`     | PeerJS signaling broker                         |
+| `NEXT_PUBLIC_PEER_PORT`     | `443`              |                                                 |
+| `NEXT_PUBLIC_PEER_SECURE`   | `true`             |                                                 |
+| `OPENROUTER_API_KEY`        | —                  | Server-side only. Powers `/api/configure-rule`. |
 
 ## Develop
 

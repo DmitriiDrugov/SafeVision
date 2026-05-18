@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from "react";
 import {
   AlertOctagon,
   Cpu,
@@ -9,223 +9,232 @@ import {
   ShieldAlert,
   Signal,
   VideoOff,
-} from 'lucide-react'
-import cn from 'clsx'
-import { createInferenceClient, type InferenceClient } from '@/lib/inference/client'
-import { drawDetections } from '@/lib/inference/overlay'
-import type { Detection } from '@/lib/inference/types'
-import { startReceiver } from '@/lib/webrtc/receiver'
-import { RuleEvaluator } from '@/lib/rules/evaluator'
-import { recordIncident, snapshotDataUrl } from '@/lib/rules/recorder'
-import { useCamerasStore, type DemoCamera } from '@/lib/stores/cameras'
-import { useRulesStore } from '@/lib/stores/rules'
-import { useIncidentsStore } from '@/lib/stores/incidents'
-import { SeverityBadge } from './SeverityBadge'
+} from "lucide-react";
+import cn from "clsx";
+import {
+  createInferenceClient,
+  type InferenceClient,
+} from "@/lib/inference/client";
+import { drawDetections } from "@/lib/inference/overlay";
+import type { Detection } from "@/lib/inference/types";
+import { startReceiver } from "@/lib/webrtc/receiver";
+import { RuleEvaluator } from "@/lib/rules/evaluator";
+import { recordIncident, snapshotDataUrl } from "@/lib/rules/recorder";
+import { useCamerasStore, type DemoCamera } from "@/lib/stores/cameras";
+import { useRulesStore } from "@/lib/stores/rules";
+import { useIncidentsStore } from "@/lib/stores/incidents";
+import { SeverityBadge } from "./SeverityBadge";
 
-type ConnState = 'pairing' | 'connecting' | 'live' | 'offline'
+type ConnState = "pairing" | "connecting" | "live" | "offline";
 
 interface Props {
-  camera: DemoCamera
+  camera: DemoCamera;
 }
 
 export default function LiveCameraView({ camera }: Props): React.ReactElement {
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const overlayRef = useRef<HTMLCanvasElement>(null)
-  const captureRef = useRef<HTMLCanvasElement>(null) // hidden, for ImageBitmap
-  const inferenceRef = useRef<InferenceClient | null>(null)
-  const evaluatorRef = useRef<RuleEvaluator | null>(null)
-  const rafRef = useRef<number | null>(null)
-  const fpsWindowRef = useRef<number[]>([])
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const overlayRef = useRef<HTMLCanvasElement>(null);
+  const captureRef = useRef<HTMLCanvasElement>(null); // hidden, for ImageBitmap
+  const inferenceRef = useRef<InferenceClient | null>(null);
+  const evaluatorRef = useRef<RuleEvaluator | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const fpsWindowRef = useRef<number[]>([]);
   // Mirrors of state used inside the requestAnimationFrame loop — refs avoid
   // stale-closure reads of the React state set elsewhere in this component.
-  const detectionsRef = useRef<Detection[]>([])
+  const detectionsRef = useRef<Detection[]>([]);
   const statsRef = useRef<{ fps: number; latencyMs: number }>({
     fps: 0,
     latencyMs: 0,
-  })
-  const zonesRef = useRef(camera.zones)
+  });
+  const zonesRef = useRef(camera.zones);
 
-  const setStatus = useCamerasStore((s) => s.setStatus)
-  const setThumbnail = useCamerasStore((s) => s.setThumbnail)
+  const setStatus = useCamerasStore((s) => s.setStatus);
+  const setThumbnail = useCamerasStore((s) => s.setThumbnail);
   const recentIncidents = useIncidentsStore((s) =>
     s.incidents.filter((i) => i.camera_id === camera.id).slice(0, 8),
-  )
-  const rules = useRulesStore((s) => s.rules)
+  );
+  const rules = useRulesStore((s) => s.rules);
 
-  const [connState, setConnState] = useState<ConnState>('pairing')
+  const [connState, setConnState] = useState<ConnState>("pairing");
   const [modelStatus, setModelStatus] = useState<
-    | { kind: 'idle' }
-    | { kind: 'loading'; loaded: number; total: number }
-    | { kind: 'ready'; backend: string }
-    | { kind: 'error'; message: string }
-  >({ kind: 'idle' })
-  const [detections, setDetections] = useState<Detection[]>([])
+    | { kind: "idle" }
+    | { kind: "loading"; loaded: number; total: number }
+    | { kind: "ready"; backend: string }
+    | { kind: "error"; message: string }
+  >({ kind: "idle" });
+  const [detections, setDetections] = useState<Detection[]>([]);
   const [stats, setStats] = useState<{ fps: number; latencyMs: number }>({
     fps: 0,
     latencyMs: 0,
-  })
-  const [error, setError] = useState<string | null>(null)
+  });
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    detectionsRef.current = detections
-  }, [detections])
+    detectionsRef.current = detections;
+  }, [detections]);
   useEffect(() => {
-    statsRef.current = stats
-  }, [stats])
+    statsRef.current = stats;
+  }, [stats]);
   useEffect(() => {
-    zonesRef.current = camera.zones
-  }, [camera.zones])
+    zonesRef.current = camera.zones;
+  }, [camera.zones]);
 
   useEffect(() => {
-    let teardown: (() => void) | null = null
-    setConnState('pairing')
-    setError(null)
-    setStatus(camera.id, 'pairing')
+    let teardown: (() => void) | null = null;
+    setConnState("pairing");
+    setError(null);
+    setStatus(camera.id, "pairing");
 
     void startReceiver(camera.peerId, {
       onStream: (stream) => {
-        const video = videoRef.current
-        if (!video) return
-        video.srcObject = stream
-        video.play().catch(() => undefined)
-        setConnState('live')
-        setStatus(camera.id, 'live')
-        startInference()
+        const video = videoRef.current;
+        if (!video) return;
+        video.srcObject = stream;
+        video.play().catch(() => undefined);
+        setConnState("live");
+        setStatus(camera.id, "live");
+        startInference();
       },
       onClose: () => {
-        setConnState('offline')
-        setStatus(camera.id, 'offline')
+        setConnState("offline");
+        setStatus(camera.id, "offline");
       },
       onError: (err) => {
-        setError(err.message)
-        setConnState('offline')
+        setError(err.message);
+        setConnState("offline");
       },
     }).then((fn) => {
-      teardown = fn
-    })
+      teardown = fn;
+    });
 
     return () => {
-      teardown?.()
-      stopInference()
-    }
+      teardown?.();
+      stopInference();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [camera.id, camera.peerId])
+  }, [camera.id, camera.peerId]);
 
   function startInference(): void {
-    if (inferenceRef.current) return
-    evaluatorRef.current = new RuleEvaluator(() => useRulesStore.getState().rules)
-    setModelStatus({ kind: 'loading', loaded: 0, total: 0 })
+    if (inferenceRef.current) return;
+    evaluatorRef.current = new RuleEvaluator(
+      () => useRulesStore.getState().rules,
+    );
+    setModelStatus({ kind: "loading", loaded: 0, total: 0 });
     inferenceRef.current = createInferenceClient({
-      onProgress: (loaded, total) =>
-        { setModelStatus({ kind: 'loading', loaded, total }); },
+      onProgress: (loaded, total) => {
+        setModelStatus({ kind: "loading", loaded, total });
+      },
       onReady: ({ backend }) => {
-        setModelStatus({ kind: 'ready', backend })
-        runLoop()
+        setModelStatus({ kind: "ready", backend });
+        runLoop();
       },
       onResult: ({ detections: dets, latencyMs }) => {
-        setDetections(dets)
+        setDetections(dets);
 
         // FPS sliding window (last 30 results)
-        const w = fpsWindowRef.current
-        w.push(performance.now())
-        while (w.length > 30) w.shift()
-        const span = w.length > 1 ? (w[w.length - 1] - w[0]) / 1000 : 0
-        const fps = span > 0 ? (w.length - 1) / span : 0
-        setStats({ fps, latencyMs })
+        const w = fpsWindowRef.current;
+        w.push(performance.now());
+        while (w.length > 30) w.shift();
+        const span = w.length > 1 ? (w[w.length - 1] - w[0]) / 1000 : 0;
+        const fps = span > 0 ? (w.length - 1) / span : 0;
+        setStats({ fps, latencyMs });
 
-        const video = videoRef.current
+        const video = videoRef.current;
         if (video) {
           const evalCtx = {
             cameraId: camera.id,
             zones: zonesRef.current,
             detections: dets,
             now: performance.now(),
-          }
-          const matches = evaluatorRef.current?.evaluate(evalCtx) ?? []
+          };
+          const matches = evaluatorRef.current?.evaluate(evalCtx) ?? [];
           for (const match of matches) {
             void recordIncident(match, camera.id, {
               source: video,
               width: video.videoWidth,
               height: video.videoHeight,
-            })
+            });
           }
         }
       },
-      onError: (err) =>
-        { setModelStatus({ kind: 'error', message: err.message }); },
-    })
+      onError: (err) => {
+        setModelStatus({ kind: "error", message: err.message });
+      },
+    });
   }
 
   function stopInference(): void {
-    inferenceRef.current?.destroy()
-    inferenceRef.current = null
-    evaluatorRef.current?.reset()
-    evaluatorRef.current = null
+    inferenceRef.current?.destroy();
+    inferenceRef.current = null;
+    evaluatorRef.current?.reset();
+    evaluatorRef.current = null;
     if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current)
-      rafRef.current = null
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
     }
   }
 
   function runLoop(): void {
-    const video = videoRef.current
-    const cap = captureRef.current
-    const overlay = overlayRef.current
-    const client = inferenceRef.current
-    if (!video || !cap || !overlay || !client) return
+    const video = videoRef.current;
+    const cap = captureRef.current;
+    const overlay = overlayRef.current;
+    const client = inferenceRef.current;
+    if (!video || !cap || !overlay || !client) return;
 
-    let lastSubmitted = 0
-    let lastThumbnail = 0
-    const TARGET_INTERVAL_MS = 200 // ~5 fps inference
+    let lastSubmitted = 0;
+    let lastThumbnail = 0;
+    const TARGET_INTERVAL_MS = 200; // ~5 fps inference
 
     const tick = (): void => {
-      const now = performance.now()
-      const w = video.videoWidth
-      const h = video.videoHeight
+      const now = performance.now();
+      const w = video.videoWidth;
+      const h = video.videoHeight;
       if (w === 0 || h === 0) {
-        rafRef.current = requestAnimationFrame(tick)
-        return
+        rafRef.current = requestAnimationFrame(tick);
+        return;
       }
 
       // Resize the overlay/capture canvases to match the *displayed* video
       // bounding box so coordinates align cleanly without extra math.
-      const rect = video.getBoundingClientRect()
+      const rect = video.getBoundingClientRect();
       if (overlay.width !== rect.width || overlay.height !== rect.height) {
-        overlay.width = Math.max(1, Math.floor(rect.width))
-        overlay.height = Math.max(1, Math.floor(rect.height))
+        overlay.width = Math.max(1, Math.floor(rect.width));
+        overlay.height = Math.max(1, Math.floor(rect.height));
       }
       // Inference capture uses a 480×360 buffer — plenty for COCO yolov8n
       // at our display resolutions, and ~6× faster than a full 720p frame.
-      const targetW = 480
-      const targetH = Math.round((targetW * h) / w)
+      const targetW = 480;
+      const targetH = Math.round((targetW * h) / w);
       if (cap.width !== targetW || cap.height !== targetH) {
-        cap.width = targetW
-        cap.height = targetH
+        cap.width = targetW;
+        cap.height = targetH;
       }
 
       if (now - lastSubmitted >= TARGET_INTERVAL_MS && client.isReady()) {
-        const ctx = cap.getContext('2d', { willReadFrequently: false })
+        const ctx = cap.getContext("2d", { willReadFrequently: false });
         if (ctx) {
-          ctx.drawImage(video, 0, 0, targetW, targetH)
+          ctx.drawImage(video, 0, 0, targetW, targetH);
           createImageBitmap(cap)
-            .then((bmp) => { client.submit(bmp, targetW, targetH); })
-            .catch(() => undefined)
+            .then((bmp) => {
+              client.submit(bmp, targetW, targetH);
+            })
+            .catch(() => undefined);
         }
-        lastSubmitted = now
+        lastSubmitted = now;
       }
 
       // Thumbnail every 2s for the camera grid.
       if (now - lastThumbnail >= 2000) {
-        lastThumbnail = now
+        lastThumbnail = now;
         snapshotDataUrl({ source: video, width: w, height: h }, 320, 180, 0.6)
           .then((url) => {
-            if (url) setThumbnail(camera.id, url)
+            if (url) setThumbnail(camera.id, url);
           })
-          .catch(() => undefined)
+          .catch(() => undefined);
       }
 
       // Render overlay every animation frame from the most recent detections.
-      const octx = overlay.getContext('2d')
+      const octx = overlay.getContext("2d");
       if (octx) {
         drawDetections(
           octx,
@@ -237,20 +246,21 @@ export default function LiveCameraView({ camera }: Props): React.ReactElement {
             fps: statsRef.current.fps,
             latencyMs: statsRef.current.latencyMs,
           },
-        )
+        );
       }
 
-      rafRef.current = requestAnimationFrame(tick)
-    }
-    rafRef.current = requestAnimationFrame(tick)
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
   }
 
   const isLoading =
-    modelStatus.kind === 'loading' || (connState === 'live' && modelStatus.kind === 'idle')
+    modelStatus.kind === "loading" ||
+    (connState === "live" && modelStatus.kind === "idle");
   const loadPct =
-    modelStatus.kind === 'loading' && modelStatus.total > 0
+    modelStatus.kind === "loading" && modelStatus.total > 0
       ? Math.round((modelStatus.loaded / modelStatus.total) * 100)
-      : null
+      : null;
 
   return (
     <div className="grid h-[calc(100vh-3.5rem-3rem)] grid-cols-1 gap-4 lg:grid-cols-[1fr_320px]">
@@ -271,7 +281,7 @@ export default function LiveCameraView({ camera }: Props): React.ReactElement {
 
         <div className="absolute left-3 top-3 flex items-center gap-2">
           <StatePill state={connState} />
-          {modelStatus.kind === 'ready' && (
+          {modelStatus.kind === "ready" && (
             <span className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-ink-900/70 px-2 py-0.5 text-[10px] uppercase tracking-widest text-ink-200">
               <Cpu className="h-3 w-3 text-accent" />
               {modelStatus.backend}
@@ -279,27 +289,27 @@ export default function LiveCameraView({ camera }: Props): React.ReactElement {
           )}
         </div>
 
-        {connState === 'pairing' && (
+        {connState === "pairing" && (
           <CenterPanel
             icon={<QrCode className="h-8 w-8 text-accent" />}
             title="Waiting for phone to pair"
             body={
               <>
                 Open <span className="font-mono text-accent">Cameras</span> on
-                the desktop, click the camera <strong>{camera.name}</strong>{' '}
+                the desktop, click the camera <strong>{camera.name}</strong>{" "}
                 tile, and scan the QR again to reconnect.
               </>
             }
           />
         )}
-        {connState === 'offline' && (
+        {connState === "offline" && (
           <CenterPanel
             icon={<VideoOff className="h-8 w-8 text-ink-400" />}
             title="Stream offline"
-            body={error ?? 'The publisher disconnected.'}
+            body={error ?? "The publisher disconnected."}
           />
         )}
-        {isLoading && connState === 'live' && (
+        {isLoading && connState === "live" && (
           <div className="pointer-events-none absolute bottom-4 left-4 right-4 rounded-md border border-white/10 bg-ink-900/80 px-3 py-2 text-xs text-ink-200 backdrop-blur">
             <div className="mb-1 flex items-center gap-2 text-accent">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -318,7 +328,7 @@ export default function LiveCameraView({ camera }: Props): React.ReactElement {
             </div>
           </div>
         )}
-        {modelStatus.kind === 'error' && (
+        {modelStatus.kind === "error" && (
           <CenterPanel
             icon={<AlertOctagon className="h-8 w-8 text-severity-critical" />}
             title="Inference failed"
@@ -387,52 +397,49 @@ export default function LiveCameraView({ camera }: Props): React.ReactElement {
         >
           <dl className="grid grid-cols-2 gap-2 text-xs">
             <Stat label="Inference FPS" value={stats.fps.toFixed(1)} />
-            <Stat
-              label="Latency"
-              value={`${stats.latencyMs.toFixed(0)} ms`}
-            />
+            <Stat label="Latency" value={`${stats.latencyMs.toFixed(0)} ms`} />
             <Stat label="Detections" value={detections.length.toString()} />
             <Stat label="Zones" value={camera.zones.length.toString()} />
           </dl>
         </SectionCard>
       </aside>
     </div>
-  )
+  );
 }
 
 function StatePill({ state }: { state: ConnState }): React.ReactElement {
   const map: Record<ConnState, { label: string; tone: string }> = {
     pairing: {
-      label: 'Pairing',
-      tone: 'border-accent/40 bg-accent/10 text-accent',
+      label: "Pairing",
+      tone: "border-accent/40 bg-accent/10 text-accent",
     },
     connecting: {
-      label: 'Connecting',
-      tone: 'border-accent/40 bg-accent/10 text-accent',
+      label: "Connecting",
+      tone: "border-accent/40 bg-accent/10 text-accent",
     },
     live: {
-      label: 'Live',
-      tone: 'border-emerald-400/40 bg-emerald-400/10 text-emerald-300',
+      label: "Live",
+      tone: "border-emerald-400/40 bg-emerald-400/10 text-emerald-300",
     },
     offline: {
-      label: 'Offline',
-      tone: 'border-white/10 bg-white/5 text-ink-400',
+      label: "Offline",
+      tone: "border-white/10 bg-white/5 text-ink-400",
     },
-  }
-  const { label, tone } = map[state]
+  };
+  const { label, tone } = map[state];
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest',
+        "inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest",
         tone,
       )}
     >
-      {state === 'live' && (
+      {state === "live" && (
         <span className="mr-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
       )}
       {label}
     </span>
-  )
+  );
 }
 
 function CenterPanel({
@@ -440,9 +447,9 @@ function CenterPanel({
   title,
   body,
 }: {
-  icon: React.ReactNode
-  title: string
-  body: React.ReactNode
+  icon: React.ReactNode;
+  title: string;
+  body: React.ReactNode;
 }): React.ReactElement {
   return (
     <div className="absolute inset-0 grid place-items-center bg-ink-950/70 backdrop-blur-sm">
@@ -452,7 +459,7 @@ function CenterPanel({
         <p className="mt-1.5 text-xs text-ink-300">{body}</p>
       </div>
     </div>
-  )
+  );
 }
 
 function SectionCard({
@@ -460,9 +467,9 @@ function SectionCard({
   icon,
   children,
 }: {
-  title: string
-  icon: React.ReactNode
-  children: React.ReactNode
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
 }): React.ReactElement {
   return (
     <section className="surface rounded-lg p-3">
@@ -472,10 +479,16 @@ function SectionCard({
       </div>
       {children}
     </section>
-  )
+  );
 }
 
-function Stat({ label, value }: { label: string; value: string }): React.ReactElement {
+function Stat({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}): React.ReactElement {
   return (
     <div className="rounded-md bg-white/5 px-2 py-1.5">
       <dt className="text-[10px] uppercase tracking-wider text-ink-500">
@@ -483,5 +496,5 @@ function Stat({ label, value }: { label: string; value: string }): React.ReactEl
       </dt>
       <dd className="font-mono text-sm font-medium text-white">{value}</dd>
     </div>
-  )
+  );
 }

@@ -37,7 +37,9 @@ class TestShouldSample:
         reader = _make_reader(camera, mock_publisher)
         assert reader._should_sample(now=2.0, last_sample_time=1.79) is True
 
-    def test_skips_when_interval_not_elapsed(self, camera: Camera, mock_publisher: AsyncMock) -> None:
+    def test_skips_when_interval_not_elapsed(
+        self, camera: Camera, mock_publisher: AsyncMock
+    ) -> None:
         reader = _make_reader(camera, mock_publisher)
         # 5 fps = 0.2 s interval; 0.05 s has elapsed — should skip
         assert reader._should_sample(now=1.9, last_sample_time=1.85) is False

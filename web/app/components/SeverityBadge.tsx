@@ -1,16 +1,16 @@
-import type { Severity } from '@/lib/api'
+import type { Severity } from "@/lib/api";
 
 const classes: Record<Severity, string> = {
-  low: 'tint-low',
-  medium: 'tint-medium',
-  high: 'tint-high',
-  critical: 'tint-critical',
-}
+  low: "tint-low",
+  medium: "tint-medium",
+  high: "tint-high",
+  critical: "tint-critical",
+};
 
 export function SeverityBadge({
   severity,
 }: {
-  severity: Severity
+  severity: Severity;
 }): React.ReactElement {
   return (
     <span
@@ -18,5 +18,5 @@ export function SeverityBadge({
     >
       {severity}
     </span>
-  )
+  );
 }

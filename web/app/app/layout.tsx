@@ -1,18 +1,18 @@
-import type { Metadata } from 'next'
-import type { ReactNode } from 'react'
-import './globals.css'
-import AppShell from '../components/AppShell'
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import "./globals.css";
+import AppShell from "../components/AppShell";
 
 export const metadata: Metadata = {
-  title: 'SafeVision · Industrial CV Safety',
+  title: "SafeVision · Industrial CV Safety",
   description:
-    'Industrial computer-vision safety platform — real-time PPE and zone detection.',
-}
+    "Industrial computer-vision safety platform — real-time PPE and zone detection.",
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: ReactNode
+  children: ReactNode;
 }): React.ReactElement {
   return (
     <html lang="en" className="dark">
@@ -20,5 +20,5 @@ export default function RootLayout({
         <AppShell>{children}</AppShell>
       </body>
     </html>
-  )
+  );
 }

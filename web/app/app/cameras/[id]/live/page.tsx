@@ -1,33 +1,33 @@
-'use client'
+"use client";
 
-import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
-import { useParams } from 'next/navigation'
-import { ArrowLeft, Pencil } from 'lucide-react'
-import LiveCameraView from '@/components/LiveCameraView'
-import { useCamerasStore } from '@/lib/stores/cameras'
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { ArrowLeft, Pencil } from "lucide-react";
+import LiveCameraView from "@/components/LiveCameraView";
+import { useCamerasStore } from "@/lib/stores/cameras";
 
 export default function CameraLivePage(): React.ReactElement {
-  const params = useParams<{ id: string }>()
-  const id = params.id
-  const cameras = useCamerasStore((s) => s.cameras)
-  const [mounted, setMounted] = useState(false)
+  const params = useParams<{ id: string }>();
+  const id = params.id;
+  const cameras = useCamerasStore((s) => s.cameras);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   const camera = useMemo(
     () => cameras.find((c) => c.id === id) ?? null,
     [cameras, id],
-  )
+  );
 
   if (!mounted) {
     return (
       <div className="grid h-[60vh] place-items-center text-sm text-ink-400">
         Loading…
       </div>
-    )
+    );
   }
 
   if (!camera) {
@@ -45,7 +45,7 @@ export default function CameraLivePage(): React.ReactElement {
           Cameras page.
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -63,7 +63,7 @@ export default function CameraLivePage(): React.ReactElement {
             <h1 className="text-lg font-semibold text-white">{camera.name}</h1>
             <div className="text-[11px] uppercase tracking-wider text-ink-500">
               ID <span className="font-mono text-ink-300">{camera.id}</span> ·
-              Peer{' '}
+              Peer{" "}
               <span className="font-mono text-ink-300">
                 {camera.peerId.slice(0, 18)}…
               </span>
@@ -81,5 +81,5 @@ export default function CameraLivePage(): React.ReactElement {
 
       <LiveCameraView camera={camera} />
     </div>
-  )
+  );
 }

@@ -1,36 +1,36 @@
-'use client'
+"use client";
 
-import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
-import { nanoid } from 'nanoid'
-import type { Zone } from '@/lib/api'
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { nanoid } from "nanoid";
+import type { Zone } from "@/lib/api";
 
-export type CameraStatus = 'pairing' | 'live' | 'offline'
+export type CameraStatus = "pairing" | "live" | "offline";
 
 export interface DemoCamera {
-  id: string
-  name: string
+  id: string;
+  name: string;
   /** PeerJS peer id used to pair with the publisher. */
-  peerId: string
-  status: CameraStatus
-  enabled: boolean
-  zones: Zone[]
-  createdAt: string
-  lastSeenAt: string | null
+  peerId: string;
+  status: CameraStatus;
+  enabled: boolean;
+  zones: Zone[];
+  createdAt: string;
+  lastSeenAt: string | null;
   /** Optional cached thumbnail data URL — small JPEG of the latest frame. */
-  thumbnail: string | null
+  thumbnail: string | null;
 }
 
 interface CamerasState {
-  cameras: DemoCamera[]
-  add: (input: { name: string; peerId?: string }) => DemoCamera
-  remove: (id: string) => void
-  update: (id: string, patch: Partial<DemoCamera>) => void
-  setStatus: (id: string, status: CameraStatus) => void
-  setThumbnail: (id: string, dataUrl: string) => void
-  setZones: (id: string, zones: Zone[]) => void
+  cameras: DemoCamera[];
+  add: (input: { name: string; peerId?: string }) => DemoCamera;
+  remove: (id: string) => void;
+  update: (id: string, patch: Partial<DemoCamera>) => void;
+  setStatus: (id: string, status: CameraStatus) => void;
+  setThumbnail: (id: string, dataUrl: string) => void;
+  setZones: (id: string, zones: Zone[]) => void;
   /** Tear down all pairings — used when the user clicks 'Reset demo' in Settings. */
-  reset: () => void
+  reset: () => void;
 }
 
 export const useCamerasStore = create<CamerasState>()(
@@ -40,25 +40,23 @@ export const useCamerasStore = create<CamerasState>()(
       add: ({ name, peerId }) => {
         const cam: DemoCamera = {
           id: nanoid(8),
-          name: name.trim() || 'Camera',
+          name: name.trim() || "Camera",
           peerId: peerId ?? `sv-${nanoid(10)}`,
-          status: 'pairing',
+          status: "pairing",
           enabled: true,
           zones: [],
           createdAt: new Date().toISOString(),
           lastSeenAt: null,
           thumbnail: null,
-        }
-        set((s) => ({ cameras: [...s.cameras, cam] }))
-        return cam
+        };
+        set((s) => ({ cameras: [...s.cameras, cam] }));
+        return cam;
       },
       remove: (id) =>
         set((s) => ({ cameras: s.cameras.filter((c) => c.id !== id) })),
       update: (id, patch) =>
         set((s) => ({
-          cameras: s.cameras.map((c) =>
-            c.id === id ? { ...c, ...patch } : c,
-          ),
+          cameras: s.cameras.map((c) => (c.id === id ? { ...c, ...patch } : c)),
         })),
       setStatus: (id, status) =>
         set((s) => ({
@@ -68,7 +66,7 @@ export const useCamerasStore = create<CamerasState>()(
                   ...c,
                   status,
                   lastSeenAt:
-                    status === 'live' ? new Date().toISOString() : c.lastSeenAt,
+                    status === "live" ? new Date().toISOString() : c.lastSeenAt,
                 }
               : c,
           ),
@@ -86,7 +84,7 @@ export const useCamerasStore = create<CamerasState>()(
       reset: () => set({ cameras: [] }),
     }),
     {
-      name: 'sv:cameras',
+      name: "sv:cameras",
       storage: createJSONStorage(() => localStorage),
       // Thumbnails can balloon localStorage — exclude them from persistence.
       partialize: (s) => ({
@@ -94,4 +92,4 @@ export const useCamerasStore = create<CamerasState>()(
       }),
     },
   ),
-)
+);

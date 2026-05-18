@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   AlertTriangle,
   Pencil,
@@ -9,39 +9,39 @@ import {
   ShieldCheck,
   Trash2,
   X,
-} from 'lucide-react'
-import { SeverityBadge } from '@/components/SeverityBadge'
+} from "lucide-react";
+import { SeverityBadge } from "@/components/SeverityBadge";
 import {
   useRulesStore,
   type DemoRule,
   type DemoRuleConditionType,
-} from '@/lib/stores/rules'
-import { useCamerasStore } from '@/lib/stores/cameras'
-import type { Severity } from '@/lib/api'
+} from "@/lib/stores/rules";
+import { useCamerasStore } from "@/lib/stores/cameras";
+import type { Severity } from "@/lib/api";
 
 const CONDITION_LABELS: Record<DemoRuleConditionType, string> = {
-  person_in_zone: 'Person in zone',
-  crowd: 'Crowd (N+ people)',
-  vehicle_in_pedestrian_zone: 'Vehicle in pedestrian zone',
-}
+  person_in_zone: "Person in zone",
+  crowd: "Crowd (N+ people)",
+  vehicle_in_pedestrian_zone: "Vehicle in pedestrian zone",
+};
 
 const CONDITION_DESCRIPTIONS: Record<DemoRuleConditionType, string> = {
-  person_in_zone: 'Triggers when any person is detected inside the zone.',
-  crowd: 'Triggers when ≥ min count people are inside the zone.',
+  person_in_zone: "Triggers when any person is detected inside the zone.",
+  crowd: "Triggers when ≥ min count people are inside the zone.",
   vehicle_in_pedestrian_zone:
-    'Triggers when a car / truck / bus / motorcycle is in the zone.',
-}
+    "Triggers when a car / truck / bus / motorcycle is in the zone.",
+};
 
 export default function RulesPage(): React.ReactElement {
-  const rules = useRulesStore((s) => s.rules)
-  const seed = useRulesStore((s) => s.seed)
-  const removeRule = useRulesStore((s) => s.remove)
-  const updateRule = useRulesStore((s) => s.update)
-  const [editing, setEditing] = useState<DemoRule | 'new' | null>(null)
+  const rules = useRulesStore((s) => s.rules);
+  const seed = useRulesStore((s) => s.seed);
+  const removeRule = useRulesStore((s) => s.remove);
+  const updateRule = useRulesStore((s) => s.update);
+  const [editing, setEditing] = useState<DemoRule | "new" | null>(null);
 
   useEffect(() => {
-    seed()
-  }, [seed])
+    seed();
+  }, [seed]);
 
   return (
     <div className="space-y-4">
@@ -62,7 +62,9 @@ export default function RulesPage(): React.ReactElement {
             Build via chat
           </Link>
           <button
-            onClick={() => { setEditing('new'); }}
+            onClick={() => {
+              setEditing("new");
+            }}
             className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-2 text-sm font-medium text-ink-950 hover:bg-accent-400"
           >
             <Plus className="h-4 w-4" />
@@ -99,13 +101,15 @@ export default function RulesPage(): React.ReactElement {
             <div className="mt-auto flex items-center justify-between pt-3">
               <Toggle
                 enabled={rule.enabled}
-                onToggle={() =>
-                  { updateRule(rule.id, { enabled: !rule.enabled }); }
-                }
+                onToggle={() => {
+                  updateRule(rule.id, { enabled: !rule.enabled });
+                }}
               />
               <div className="flex gap-1">
                 <button
-                  onClick={() => { setEditing(rule); }}
+                  onClick={() => {
+                    setEditing(rule);
+                  }}
                   className="inline-flex items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-[11px] text-ink-200 hover:bg-white/5"
                 >
                   <Pencil className="h-3 w-3" />
@@ -114,7 +118,7 @@ export default function RulesPage(): React.ReactElement {
                 <button
                   onClick={() => {
                     if (confirm(`Delete rule "${rule.name}"?`))
-                      removeRule(rule.id)
+                      removeRule(rule.id);
                   }}
                   className="rounded-md border border-white/10 p-1 text-ink-400 hover:bg-severity-critical/10 hover:text-severity-critical"
                   aria-label="Delete rule"
@@ -130,7 +134,9 @@ export default function RulesPage(): React.ReactElement {
             <AlertTriangle className="mb-3 h-7 w-7 text-ink-500" />
             <p className="text-sm text-ink-300">No rules configured yet.</p>
             <button
-              onClick={() => { setEditing('new'); }}
+              onClick={() => {
+                setEditing("new");
+              }}
               className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-ink-950 hover:bg-accent-400"
             >
               <Plus className="h-4 w-4" />
@@ -142,15 +148,23 @@ export default function RulesPage(): React.ReactElement {
 
       {editing && (
         <RuleEditor
-          initial={editing === 'new' ? null : editing}
-          onClose={() => { setEditing(null); }}
+          initial={editing === "new" ? null : editing}
+          onClose={() => {
+            setEditing(null);
+          }}
         />
       )}
     </div>
-  )
+  );
 }
 
-function Mini({ label, value }: { label: string; value: string }): React.ReactElement {
+function Mini({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}): React.ReactElement {
   return (
     <div className="rounded-md bg-white/5 px-2 py-1.5">
       <div className="text-[9px] uppercase tracking-widest text-ink-500">
@@ -158,15 +172,15 @@ function Mini({ label, value }: { label: string; value: string }): React.ReactEl
       </div>
       <div className="font-mono text-sm text-white">{value}</div>
     </div>
-  )
+  );
 }
 
 function Toggle({
   enabled,
   onToggle,
 }: {
-  enabled: boolean
-  onToggle: () => void
+  enabled: boolean;
+  onToggle: () => void;
 }): React.ReactElement {
   return (
     <button
@@ -174,71 +188,72 @@ function Toggle({
       role="switch"
       aria-checked={enabled}
       className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-        enabled ? 'bg-accent' : 'bg-white/10'
+        enabled ? "bg-accent" : "bg-white/10"
       }`}
     >
       <span
         className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
-          enabled ? 'translate-x-4' : 'translate-x-1'
+          enabled ? "translate-x-4" : "translate-x-1"
         }`}
       />
     </button>
-  )
+  );
 }
 
 function RuleEditor({
   initial,
   onClose,
 }: {
-  initial: DemoRule | null
-  onClose: () => void
+  initial: DemoRule | null;
+  onClose: () => void;
 }): React.ReactElement {
-  const add = useRulesStore((s) => s.add)
-  const update = useRulesStore((s) => s.update)
-  const cameras = useCamerasStore((s) => s.cameras)
+  const add = useRulesStore((s) => s.add);
+  const update = useRulesStore((s) => s.update);
+  const cameras = useCamerasStore((s) => s.cameras);
 
-  const [name, setName] = useState(initial?.name ?? '')
-  const [description, setDescription] = useState(initial?.description ?? '')
+  const [name, setName] = useState(initial?.name ?? "");
+  const [description, setDescription] = useState(initial?.description ?? "");
   const [type, setType] = useState<DemoRuleConditionType>(
-    initial?.type ?? 'person_in_zone',
-  )
+    initial?.type ?? "person_in_zone",
+  );
   const [cameraId, setCameraId] = useState<string | null>(
     initial?.cameraId ?? null,
-  )
-  const [zoneId, setZoneId] = useState<string | null>(initial?.zoneId ?? null)
-  const [minCount, setMinCount] = useState(initial?.minCount ?? 1)
+  );
+  const [zoneId, setZoneId] = useState<string | null>(initial?.zoneId ?? null);
+  const [minCount, setMinCount] = useState(initial?.minCount ?? 1);
   const [durationSeconds, setDurationSeconds] = useState(
     initial?.durationSeconds ?? 1,
-  )
+  );
   const [cooldownSeconds, setCooldownSeconds] = useState(
     initial?.cooldownSeconds ?? 10,
-  )
-  const [severity, setSeverity] = useState<Severity>(initial?.severity ?? 'high')
+  );
+  const [severity, setSeverity] = useState<Severity>(
+    initial?.severity ?? "high",
+  );
 
-  const zonesForCamera =
-    cameras.find((c) => c.id === cameraId)?.zones ?? []
+  const zonesForCamera = cameras.find((c) => c.id === cameraId)?.zones ?? [];
 
   const submit = (): void => {
-    if (!name.trim()) return
+    if (!name.trim()) return;
     const patch = {
       name: name.trim(),
       description: description.trim(),
       type,
       cameraId,
       zoneId,
-      minCount: type === 'crowd' ? Math.max(2, minCount) : 1,
+      minCount: type === "crowd" ? Math.max(2, minCount) : 1,
       durationSeconds: Math.max(0, durationSeconds),
       cooldownSeconds: Math.max(0, cooldownSeconds),
       severity,
       enabled: initial?.enabled ?? true,
-    }
+    };
     if (initial) {
-      update(initial.id, patch)
+      update(initial.id, patch);
     } else {
-      add(patch)
+      add(patch);
     }
-    onClose()
-  }
+    onClose();
+  };
 
   return (
     <div
@@ -247,11 +262,13 @@ function RuleEditor({
     >
       <div
         className="surface-raised w-full max-w-lg rounded-xl shadow-panel"
-        onClick={(e) => { e.stopPropagation(); }}
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
       >
         <header className="flex items-center justify-between border-b border-white/5 px-5 py-3">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-white">
-            {initial ? 'Edit rule' : 'New rule'}
+            {initial ? "Edit rule" : "New rule"}
           </h2>
           <button
             onClick={onClose}
@@ -266,7 +283,9 @@ function RuleEditor({
             <input
               autoFocus
               value={name}
-              onChange={(e) => { setName(e.target.value); }}
+              onChange={(e) => {
+                setName(e.target.value);
+              }}
               className="w-full rounded-md surface-input px-2 py-1.5"
             />
           </Label>
@@ -274,14 +293,18 @@ function RuleEditor({
             <textarea
               rows={2}
               value={description}
-              onChange={(e) => { setDescription(e.target.value); }}
+              onChange={(e) => {
+                setDescription(e.target.value);
+              }}
               className="w-full rounded-md surface-input px-2 py-1.5"
             />
           </Label>
           <Label text="Condition">
             <select
               value={type}
-              onChange={(e) => { setType(e.target.value as DemoRuleConditionType); }}
+              onChange={(e) => {
+                setType(e.target.value as DemoRuleConditionType);
+              }}
               className="w-full rounded-md surface-input px-2 py-1.5"
             >
               {(
@@ -302,10 +325,10 @@ function RuleEditor({
           <div className="grid grid-cols-2 gap-3">
             <Label text="Camera">
               <select
-                value={cameraId ?? ''}
-                onChange={(e) =>
-                  { setCameraId(e.target.value === '' ? null : e.target.value); }
-                }
+                value={cameraId ?? ""}
+                onChange={(e) => {
+                  setCameraId(e.target.value === "" ? null : e.target.value);
+                }}
                 className="w-full rounded-md surface-input px-2 py-1.5"
               >
                 <option value="">All cameras</option>
@@ -318,10 +341,10 @@ function RuleEditor({
             </Label>
             <Label text="Zone">
               <select
-                value={zoneId ?? ''}
-                onChange={(e) =>
-                  { setZoneId(e.target.value === '' ? null : e.target.value); }
-                }
+                value={zoneId ?? ""}
+                onChange={(e) => {
+                  setZoneId(e.target.value === "" ? null : e.target.value);
+                }}
                 disabled={!cameraId || zonesForCamera.length === 0}
                 className="w-full rounded-md surface-input px-2 py-1.5 disabled:opacity-50"
               >
@@ -342,8 +365,10 @@ function RuleEditor({
                 min={1}
                 max={50}
                 value={minCount}
-                disabled={type !== 'crowd'}
-                onChange={(e) => { setMinCount(Number(e.target.value)); }}
+                disabled={type !== "crowd"}
+                onChange={(e) => {
+                  setMinCount(Number(e.target.value));
+                }}
                 className="w-full rounded-md surface-input px-2 py-1.5 disabled:opacity-50"
               />
             </Label>
@@ -353,7 +378,9 @@ function RuleEditor({
                 min={0}
                 max={60}
                 value={durationSeconds}
-                onChange={(e) => { setDurationSeconds(Number(e.target.value)); }}
+                onChange={(e) => {
+                  setDurationSeconds(Number(e.target.value));
+                }}
                 className="w-full rounded-md surface-input px-2 py-1.5"
               />
             </Label>
@@ -363,7 +390,9 @@ function RuleEditor({
                 min={0}
                 max={3600}
                 value={cooldownSeconds}
-                onChange={(e) => { setCooldownSeconds(Number(e.target.value)); }}
+                onChange={(e) => {
+                  setCooldownSeconds(Number(e.target.value));
+                }}
                 className="w-full rounded-md surface-input px-2 py-1.5"
               />
             </Label>
@@ -371,7 +400,9 @@ function RuleEditor({
           <Label text="Severity">
             <select
               value={severity}
-              onChange={(e) => { setSeverity(e.target.value as Severity); }}
+              onChange={(e) => {
+                setSeverity(e.target.value as Severity);
+              }}
               className="w-full rounded-md surface-input px-2 py-1.5"
             >
               <option value="low">Low</option>
@@ -394,20 +425,20 @@ function RuleEditor({
             disabled={!name.trim()}
             className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-ink-950 hover:bg-accent-400 disabled:opacity-50"
           >
-            {initial ? 'Save changes' : 'Create rule'}
+            {initial ? "Save changes" : "Create rule"}
           </button>
         </footer>
       </div>
     </div>
-  )
+  );
 }
 
 function Label({
   text,
   children,
 }: {
-  text: string
-  children: React.ReactNode
+  text: string;
+  children: React.ReactNode;
 }): React.ReactElement {
   return (
     <label className="block">
@@ -416,5 +447,5 @@ function Label({
       </span>
       {children}
     </label>
-  )
+  );
 }
