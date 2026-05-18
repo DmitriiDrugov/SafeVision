@@ -198,7 +198,9 @@ jobs:
             context: .
             dockerfile: services/incident/Dockerfile
           - service: web
-            context: .
+            # web/app/Dockerfile expects its own folder as the build context
+            # (it COPYs package.json and .npmrc relative to ./).
+            context: web/app
             dockerfile: web/app/Dockerfile
     steps:
       - uses: actions/checkout@v4
