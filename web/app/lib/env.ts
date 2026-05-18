@@ -8,15 +8,15 @@
 
 export const ENV = {
   demoMode:
-    (process.env.NEXT_PUBLIC_DEMO_MODE ?? '').toLowerCase() === 'true' ||
+    (process.env.NEXT_PUBLIC_DEMO_MODE ?? "").toLowerCase() === "true" ||
     !process.env.NEXT_PUBLIC_API_URL,
-  appName: process.env.NEXT_PUBLIC_APP_NAME ?? 'SafeVision',
+  appName: process.env.NEXT_PUBLIC_APP_NAME ?? "SafeVision",
   peer: {
-    host: process.env.NEXT_PUBLIC_PEER_HOST ?? '0.peerjs.com',
+    host: process.env.NEXT_PUBLIC_PEER_HOST ?? "0.peerjs.com",
     port: Number(process.env.NEXT_PUBLIC_PEER_PORT ?? 443),
     secure:
-      (process.env.NEXT_PUBLIC_PEER_SECURE ?? 'true').toLowerCase() === 'true',
+      (process.env.NEXT_PUBLIC_PEER_SECURE ?? "true").toLowerCase() === "true",
   },
-} as const
+} as const;
 
-export const isDemoMode = (): boolean => ENV.demoMode
+export const isDemoMode = (): boolean => ENV.demoMode;

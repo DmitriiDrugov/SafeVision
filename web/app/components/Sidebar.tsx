@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -15,76 +15,76 @@ import {
   Sliders,
   Video,
   type LucideIcon,
-} from 'lucide-react'
-import cn from 'clsx'
-import { getCurrentUser, logout, type AuthUser } from '@/lib/auth'
-import { ENV, isDemoMode } from '@/lib/env'
+} from "lucide-react";
+import cn from "clsx";
+import { getCurrentUser, logout, type AuthUser } from "@/lib/auth";
+import { ENV, isDemoMode } from "@/lib/env";
 
 interface NavItem {
-  href: string
-  label: string
-  icon: LucideIcon
+  href: string;
+  label: string;
+  icon: LucideIcon;
 }
 
 const NAV: NavItem[] = [
-  { href: '/', label: 'Overview', icon: Activity },
-  { href: '/cameras', label: 'Cameras', icon: Video },
-  { href: '/incidents', label: 'Incidents', icon: AlertTriangle },
-  { href: '/rules', label: 'Rules', icon: ShieldCheck },
-  { href: '/configure', label: 'Rule Builder', icon: Sliders },
-]
+  { href: "/", label: "Overview", icon: Activity },
+  { href: "/cameras", label: "Cameras", icon: Video },
+  { href: "/incidents", label: "Incidents", icon: AlertTriangle },
+  { href: "/rules", label: "Rules", icon: ShieldCheck },
+  { href: "/configure", label: "Rule Builder", icon: Sliders },
+];
 
-const STORAGE_KEY = 'sv:sidebar:collapsed'
+const STORAGE_KEY = "sv:sidebar:collapsed";
 
 export default function Sidebar() {
-  const router = useRouter()
-  const pathname = usePathname()
-  const [user, setUser] = useState<AuthUser | null>(null)
-  const [collapsed, setCollapsed] = useState(false)
-  const [mounted, setMounted] = useState(false)
+  const router = useRouter();
+  const pathname = usePathname();
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-    setUser(getCurrentUser())
+    setMounted(true);
+    setUser(getCurrentUser());
     try {
-      setCollapsed(localStorage.getItem(STORAGE_KEY) === '1')
+      setCollapsed(localStorage.getItem(STORAGE_KEY) === "1");
     } catch {
       // ignore
     }
-  }, [])
+  }, []);
 
   const toggle = (): void => {
     setCollapsed((c) => {
-      const next = !c
+      const next = !c;
       try {
-        localStorage.setItem(STORAGE_KEY, next ? '1' : '0')
+        localStorage.setItem(STORAGE_KEY, next ? "1" : "0");
       } catch {
         // ignore
       }
-      return next
-    })
-  }
+      return next;
+    });
+  };
 
   const handleLogout = (): void => {
-    logout()
-    router.push('/login')
-  }
+    logout();
+    router.push("/login");
+  };
 
-  const demo = isDemoMode()
+  const demo = isDemoMode();
 
   return (
     <aside
       className={cn(
-        'flex h-screen flex-col border-r border-white/5 bg-ink-900 transition-[width] duration-200',
-        collapsed ? 'w-[64px]' : 'w-[220px]',
+        "flex h-screen flex-col border-r border-white/5 bg-ink-900 transition-[width] duration-200",
+        collapsed ? "w-[64px]" : "w-[220px]",
       )}
-      data-collapsed={collapsed ? 'true' : 'false'}
+      data-collapsed={collapsed ? "true" : "false"}
     >
       {/* Brand */}
       <div
         className={cn(
-          'flex items-center gap-2 border-b border-white/5 px-4 py-4',
-          collapsed && 'justify-center px-0',
+          "flex items-center gap-2 border-b border-white/5 px-4 py-4",
+          collapsed && "justify-center px-0",
         )}
       >
         <span className="relative grid h-8 w-8 place-items-center rounded-md bg-accent/15 text-accent">
@@ -93,9 +93,11 @@ export default function Sidebar() {
         </span>
         {!collapsed && (
           <div className="leading-tight">
-            <div className="text-sm font-semibold text-white">{ENV.appName}</div>
+            <div className="text-sm font-semibold text-white">
+              {ENV.appName}
+            </div>
             <div className="text-[10px] uppercase tracking-widest text-ink-400">
-              {demo ? 'Demo Mode' : 'Connected'}
+              {demo ? "Demo Mode" : "Connected"}
             </div>
           </div>
         )}
@@ -106,27 +108,27 @@ export default function Sidebar() {
         <ul className="space-y-1">
           {NAV.map((item) => {
             const active =
-              item.href === '/'
-                ? pathname === '/'
-                : pathname.startsWith(item.href)
+              item.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(item.href);
             return (
               <li key={item.href}>
                 <Link
                   href={item.href}
                   title={collapsed ? item.label : undefined}
                   className={cn(
-                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                     active
-                      ? 'bg-accent/10 text-accent shadow-glow'
-                      : 'text-ink-300 hover:bg-white/5 hover:text-white',
-                    collapsed && 'justify-center px-0',
+                      ? "bg-accent/10 text-accent shadow-glow"
+                      : "text-ink-300 hover:bg-white/5 hover:text-white",
+                    collapsed && "justify-center px-0",
                   )}
                 >
                   <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
                   {!collapsed && <span className="truncate">{item.label}</span>}
                 </Link>
               </li>
-            )
+            );
           })}
         </ul>
       </nav>
@@ -155,10 +157,10 @@ export default function Sidebar() {
         <button
           onClick={toggle}
           className={cn(
-            'flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs text-ink-400 hover:bg-white/5 hover:text-white',
-            collapsed && 'justify-center px-0',
+            "flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs text-ink-400 hover:bg-white/5 hover:text-white",
+            collapsed && "justify-center px-0",
           )}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (
             <ChevronsRight className="h-3.5 w-3.5" />
@@ -180,5 +182,5 @@ export default function Sidebar() {
         )}
       </div>
     </aside>
-  )
+  );
 }

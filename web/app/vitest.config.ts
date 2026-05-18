@@ -1,5 +1,5 @@
-import { defineConfig } from 'vitest/config'
-import path from 'node:path'
+import { defineConfig } from "vitest/config";
+import path from "node:path";
 
 /**
  * Vitest configuration for browser-agnostic unit tests. We do NOT bundle
@@ -7,13 +7,13 @@ import path from 'node:path'
  */
 export default defineConfig({
   test: {
-    include: ['__tests__/**/*.test.ts'],
-    environment: 'node',
+    include: ["__tests__/**/*.test.ts"],
+    environment: "node",
     globals: false,
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname),
+      "@": path.resolve(__dirname),
     },
   },
-})
+});

@@ -1,28 +1,28 @@
-'use client'
+"use client";
 
-import { usePathname } from 'next/navigation'
-import type { ReactNode } from 'react'
-import Sidebar from './Sidebar'
-import TopBar from './TopBar'
+import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
+import Sidebar from "./Sidebar";
+import TopBar from "./TopBar";
 
 /**
  * Top-level chrome: sidebar + topbar. We bypass the shell on routes that own
  * their full viewport (login, mobile publisher).
  */
-const CHROMELESS_PREFIXES = ['/login', '/publish']
+const CHROMELESS_PREFIXES = ["/login", "/publish"];
 
 export default function AppShell({
   children,
 }: {
-  children: ReactNode
+  children: ReactNode;
 }): React.ReactElement {
-  const pathname = usePathname()
+  const pathname = usePathname();
   const chromeless = CHROMELESS_PREFIXES.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
-  )
+  );
 
   if (chromeless) {
-    return <>{children}</>
+    return <>{children}</>;
   }
 
   return (
@@ -35,5 +35,5 @@ export default function AppShell({
         </main>
       </div>
     </div>
-  )
+  );
 }

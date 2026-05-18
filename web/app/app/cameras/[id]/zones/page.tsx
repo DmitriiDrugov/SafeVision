@@ -1,147 +1,147 @@
-'use client'
+"use client";
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Check, Plus, Trash2, X } from 'lucide-react'
-import type { Zone } from '@/lib/api'
-import { useCamerasStore } from '@/lib/stores/cameras'
-import { nanoid } from 'nanoid'
+import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft, Check, Plus, Trash2, X } from "lucide-react";
+import type { Zone } from "@/lib/api";
+import { useCamerasStore } from "@/lib/stores/cameras";
+import { nanoid } from "nanoid";
 
-type Point = [number, number]
+type Point = [number, number];
 
 interface DraftZone {
-  vertices: Point[]
-  closed: boolean
+  vertices: Point[];
+  closed: boolean;
 }
 
 const ZONE_COLORS = [
-  '#00D4FF',
-  '#10b981',
-  '#facc15',
-  '#f97316',
-  '#ef4444',
-  '#a78bfa',
-]
+  "#00D4FF",
+  "#10b981",
+  "#facc15",
+  "#f97316",
+  "#ef4444",
+  "#a78bfa",
+];
 
-const CANVAS_W = 800
-const CANVAS_H = 450
+const CANVAS_W = 800;
+const CANVAS_H = 450;
 
 export default function ZoneEditorPage(): React.ReactElement {
-  const router = useRouter()
-  const { id } = useParams<{ id: string }>()
+  const router = useRouter();
+  const { id } = useParams<{ id: string }>();
   const camera = useCamerasStore((s) =>
-    id ? s.cameras.find((c) => c.id === id) ?? null : null,
-  )
-  const setZonesPersisted = useCamerasStore((s) => s.setZones)
+    id ? (s.cameras.find((c) => c.id === id) ?? null) : null,
+  );
+  const setZonesPersisted = useCamerasStore((s) => s.setZones);
 
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [zones, setZones] = useState<Zone[]>([])
-  const [draft, setDraft] = useState<DraftZone | null>(null)
-  const [draftName, setDraftName] = useState('')
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [zones, setZones] = useState<Zone[]>([]);
+  const [draft, setDraft] = useState<DraftZone | null>(null);
+  const [draftName, setDraftName] = useState("");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (camera) setZones(camera.zones)
-  }, [camera])
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (camera) setZones(camera.zones);
+  }, [camera]);
 
   const redraw = useCallback(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    ctx.clearRect(0, 0, CANVAS_W, CANVAS_H)
+    ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
 
     // Background reference: thumbnail of the camera if we have one, else grid.
     if (camera?.thumbnail) {
-      const img = new Image()
+      const img = new Image();
       img.onload = (): void => {
-        ctx.globalAlpha = 0.6
-        ctx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H)
-        ctx.globalAlpha = 1
-        paintZones(ctx, zones, draft)
-      }
-      img.src = camera.thumbnail
+        ctx.globalAlpha = 0.6;
+        ctx.drawImage(img, 0, 0, CANVAS_W, CANVAS_H);
+        ctx.globalAlpha = 1;
+        paintZones(ctx, zones, draft);
+      };
+      img.src = camera.thumbnail;
     } else {
-      ctx.fillStyle = '#06080d'
-      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H)
-      ctx.strokeStyle = 'rgba(255,255,255,0.05)'
-      ctx.lineWidth = 1
+      ctx.fillStyle = "#06080d";
+      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      ctx.strokeStyle = "rgba(255,255,255,0.05)";
+      ctx.lineWidth = 1;
       for (let x = 0; x <= CANVAS_W; x += 40) {
-        ctx.beginPath()
-        ctx.moveTo(x, 0)
-        ctx.lineTo(x, CANVAS_H)
-        ctx.stroke()
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, CANVAS_H);
+        ctx.stroke();
       }
       for (let y = 0; y <= CANVAS_H; y += 40) {
-        ctx.beginPath()
-        ctx.moveTo(0, y)
-        ctx.lineTo(CANVAS_W, y)
-        ctx.stroke()
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(CANVAS_W, y);
+        ctx.stroke();
       }
-      paintZones(ctx, zones, draft)
+      paintZones(ctx, zones, draft);
     }
-  }, [zones, draft, camera?.thumbnail])
+  }, [zones, draft, camera?.thumbnail]);
 
   useEffect(() => {
-    redraw()
-  }, [redraw])
+    redraw();
+  }, [redraw]);
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>): void => {
-    if (draft?.closed) return
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const rect = canvas.getBoundingClientRect()
-    const nx = ((e.clientX - rect.left) * (CANVAS_W / rect.width)) / CANVAS_W
-    const ny = ((e.clientY - rect.top) * (CANVAS_H / rect.height)) / CANVAS_H
+    if (draft?.closed) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const nx = ((e.clientX - rect.left) * (CANVAS_W / rect.width)) / CANVAS_W;
+    const ny = ((e.clientY - rect.top) * (CANVAS_H / rect.height)) / CANVAS_H;
     if (!draft) {
-      setDraft({ vertices: [[nx, ny]], closed: false })
-      return
+      setDraft({ vertices: [[nx, ny]], closed: false });
+      return;
     }
-    const [fx, fy] = draft.vertices[0]
-    const distPx = Math.hypot((nx - fx) * CANVAS_W, (ny - fy) * CANVAS_H)
+    const [fx, fy] = draft.vertices[0];
+    const distPx = Math.hypot((nx - fx) * CANVAS_W, (ny - fy) * CANVAS_H);
     if (draft.vertices.length >= 3 && distPx < 14) {
-      setDraft({ ...draft, closed: true })
-      return
+      setDraft({ ...draft, closed: true });
+      return;
     }
-    setDraft({ ...draft, vertices: [...draft.vertices, [nx, ny]] })
-  }
+    setDraft({ ...draft, vertices: [...draft.vertices, [nx, ny]] });
+  };
 
   const commitDraft = (): void => {
-    if (!draft?.closed || !draftName.trim()) return
-    const slug = draftName.trim().toLowerCase().replace(/\s+/g, '_')
+    if (!draft?.closed || !draftName.trim()) return;
+    const slug = draftName.trim().toLowerCase().replace(/\s+/g, "_");
     const zone: Zone = {
       id: `${slug}-${nanoid(4)}`,
       name: draftName.trim(),
       polygon: draft.vertices,
-    }
-    setZones((prev) => [...prev, zone])
-    setDraft(null)
-    setDraftName('')
-  }
+    };
+    setZones((prev) => [...prev, zone]);
+    setDraft(null);
+    setDraftName("");
+  };
 
   const discardDraft = (): void => {
-    setDraft(null)
-    setDraftName('')
-  }
+    setDraft(null);
+    setDraftName("");
+  };
 
   const removeZone = (idx: number): void => {
-    setZones((prev) => prev.filter((_, i) => i !== idx))
-  }
+    setZones((prev) => prev.filter((_, i) => i !== idx));
+  };
 
   const handleSave = (): void => {
-    if (!id) return
-    setZonesPersisted(id, zones)
-    router.push(`/cameras/${encodeURIComponent(id)}/live`)
-  }
+    if (!id) return;
+    setZonesPersisted(id, zones);
+    router.push(`/cameras/${encodeURIComponent(id)}/live`);
+  };
 
   if (!mounted) {
-    return <div className="text-sm text-ink-400">Loading…</div>
+    return <div className="text-sm text-ink-400">Loading…</div>;
   }
   if (!camera) {
     return (
@@ -157,7 +157,7 @@ export default function ZoneEditorPage(): React.ReactElement {
           Camera not found.
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -229,7 +229,9 @@ export default function ZoneEditorPage(): React.ReactElement {
                 <input
                   autoFocus
                   value={draftName}
-                  onChange={(e) => { setDraftName(e.target.value); }}
+                  onChange={(e) => {
+                    setDraftName(e.target.value);
+                  }}
                   placeholder="Zone name (e.g., loading_bay)"
                   className="w-full rounded-md surface-input px-2 py-1.5 text-sm"
                 />
@@ -273,13 +275,16 @@ export default function ZoneEditorPage(): React.ReactElement {
                       <span
                         className="inline-block h-2.5 w-2.5 rounded-sm"
                         style={{
-                          backgroundColor: ZONE_COLORS[idx % ZONE_COLORS.length],
+                          backgroundColor:
+                            ZONE_COLORS[idx % ZONE_COLORS.length],
                         }}
                       />
                       <span className="truncate text-ink-100">{z.name}</span>
                     </span>
                     <button
-                      onClick={() => { removeZone(idx); }}
+                      onClick={() => {
+                        removeZone(idx);
+                      }}
                       className="rounded p-1 text-ink-400 hover:bg-severity-critical/15 hover:text-severity-critical"
                       aria-label={`Remove ${z.name}`}
                     >
@@ -293,7 +298,7 @@ export default function ZoneEditorPage(): React.ReactElement {
         </aside>
       </div>
     </div>
-  )
+  );
 }
 
 function paintZones(
@@ -302,57 +307,57 @@ function paintZones(
   draft: DraftZone | null,
 ): void {
   zones.forEach((zone, idx) => {
-    const color = ZONE_COLORS[idx % ZONE_COLORS.length]
-    if (zone.polygon.length < 2) return
-    ctx.beginPath()
+    const color = ZONE_COLORS[idx % ZONE_COLORS.length];
+    if (zone.polygon.length < 2) return;
+    ctx.beginPath();
     zone.polygon.forEach(([nx, ny], i) => {
-      const x = nx * CANVAS_W
-      const y = ny * CANVAS_H
-      if (i === 0) ctx.moveTo(x, y)
-      else ctx.lineTo(x, y)
-    })
-    ctx.closePath()
-    ctx.fillStyle = color + '22'
-    ctx.fill()
-    ctx.strokeStyle = color
-    ctx.lineWidth = 2
-    ctx.stroke()
+      const x = nx * CANVAS_W;
+      const y = ny * CANVAS_H;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+    ctx.fillStyle = color + "22";
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
     const cx =
       (zone.polygon.reduce((s, [x]) => s + x, 0) / zone.polygon.length) *
-      CANVAS_W
+      CANVAS_W;
     const cy =
       (zone.polygon.reduce((s, [, y]) => s + y, 0) / zone.polygon.length) *
-      CANVAS_H
-    ctx.fillStyle = color
-    ctx.font = '600 12px Inter, sans-serif'
-    ctx.textAlign = 'center'
-    ctx.fillText(zone.name, cx, cy)
-  })
+      CANVAS_H;
+    ctx.fillStyle = color;
+    ctx.font = "600 12px Inter, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(zone.name, cx, cy);
+  });
 
   if (draft && draft.vertices.length > 0) {
-    ctx.beginPath()
+    ctx.beginPath();
     draft.vertices.forEach(([nx, ny], i) => {
-      const x = nx * CANVAS_W
-      const y = ny * CANVAS_H
-      if (i === 0) ctx.moveTo(x, y)
-      else ctx.lineTo(x, y)
-    })
-    ctx.strokeStyle = '#00D4FF'
-    ctx.lineWidth = 2
-    ctx.setLineDash([6, 3])
-    ctx.stroke()
-    ctx.setLineDash([])
+      const x = nx * CANVAS_W;
+      const y = ny * CANVAS_H;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = "#00D4FF";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
     draft.vertices.forEach(([nx, ny], i) => {
-      const x = nx * CANVAS_W
-      const y = ny * CANVAS_H
-      ctx.beginPath()
-      ctx.arc(x, y, i === 0 ? 6 : 4, 0, Math.PI * 2)
-      ctx.fillStyle = i === 0 ? '#00D4FF' : '#80e7ff'
-      ctx.fill()
-      ctx.strokeStyle = '#06080d'
-      ctx.lineWidth = 1.5
-      ctx.stroke()
-    })
+      const x = nx * CANVAS_W;
+      const y = ny * CANVAS_H;
+      ctx.beginPath();
+      ctx.arc(x, y, i === 0 ? 6 : 4, 0, Math.PI * 2);
+      ctx.fillStyle = i === 0 ? "#00D4FF" : "#80e7ff";
+      ctx.fill();
+      ctx.strokeStyle = "#06080d";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
   }
 }

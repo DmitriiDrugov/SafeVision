@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test'
+import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Playwright E2E configuration.
@@ -16,25 +16,25 @@ import { defineConfig, devices } from '@playwright/test'
  */
 
 export default defineConfig({
-  testDir: './tests/e2e',
+  testDir: "./tests/e2e",
   timeout: 30_000,
   expect: { timeout: 5_000 },
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: process.env.CI ? 'github' : 'list',
+  reporter: process.env.CI ? "github" : "list",
 
   use: {
-    baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    baseURL: "http://localhost:3000",
+    trace: "on-first-retry",
+    screenshot: "only-on-failure",
   },
 
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
     },
   ],
 
@@ -43,14 +43,14 @@ export default defineConfig({
     // serves the page-router app correctly for our E2E needs. Switching to
     // `node .next/standalone/server.js` would require copying static assets,
     // which `npm run build` doesn't do automatically.
-    command: 'npm run start',
-    url: 'http://localhost:3000',
+    command: "npm run start",
+    url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: {
       // Demo mode — tests exercise the frontend-only showcase path.
-      NEXT_PUBLIC_DEMO_MODE: 'true',
-      NEXT_PUBLIC_API_URL: '',
+      NEXT_PUBLIC_DEMO_MODE: "true",
+      NEXT_PUBLIC_API_URL: "",
     },
   },
-})
+});

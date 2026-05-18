@@ -1,9 +1,9 @@
-import type { NextConfig } from 'next'
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Required for the multi-stage Docker build (server.js entry point).
   // Harmless on Vercel — they detect Next.js standalone automatically.
-  output: 'standalone',
+  output: "standalone",
 
   // Lint runs in CI; skipping it during `next build` keeps Docker builds fast
   // and prevents stylistic warnings from blocking image creation.
@@ -22,9 +22,9 @@ const nextConfig: NextConfig = {
         fs: false,
         path: false,
         crypto: false,
-      }
+      };
     }
-    return config
+    return config;
   },
 
   // Strict cross-origin isolation lets us use SharedArrayBuffer in workers,
@@ -33,21 +33,21 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: '/cameras/:id/live',
+        source: "/cameras/:id/live",
         headers: [
-          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
-          { key: 'Cross-Origin-Embedder-Policy', value: 'credentialless' },
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
         ],
       },
       {
-        source: '/publish/:peer',
+        source: "/publish/:peer",
         headers: [
-          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
-          { key: 'Cross-Origin-Embedder-Policy', value: 'credentialless' },
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          { key: "Cross-Origin-Embedder-Policy", value: "credentialless" },
         ],
       },
-    ]
+    ];
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;

@@ -236,7 +236,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(
     title="SafeVision Incident Service",
-    description="Manages safety violation incidents — persistence, lifecycle, and real-time streaming",
+    description=(
+        "Manages safety violation incidents — persistence, lifecycle, and real-time streaming"
+    ),
     version="0.1.0",
     lifespan=lifespan,
 )

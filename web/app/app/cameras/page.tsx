@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Camera as CameraIcon,
   MoreVertical,
@@ -11,49 +11,51 @@ import {
   Trash2,
   Video as VideoIcon,
   WifiOff,
-} from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
-import cn from 'clsx'
-import PairCameraModal from '@/components/PairCameraModal'
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import cn from "clsx";
+import PairCameraModal from "@/components/PairCameraModal";
 import {
   useCamerasStore,
   type CameraStatus,
   type DemoCamera,
-} from '@/lib/stores/cameras'
+} from "@/lib/stores/cameras";
 
 const statusMap: Record<
   CameraStatus,
   { label: string; tone: string; dot: string }
 > = {
   pairing: {
-    label: 'Pairing',
-    tone: 'border-accent/40 bg-accent/10 text-accent',
-    dot: 'bg-accent',
+    label: "Pairing",
+    tone: "border-accent/40 bg-accent/10 text-accent",
+    dot: "bg-accent",
   },
   live: {
-    label: 'Live',
-    tone: 'border-emerald-400/40 bg-emerald-400/10 text-emerald-300',
-    dot: 'bg-emerald-400',
+    label: "Live",
+    tone: "border-emerald-400/40 bg-emerald-400/10 text-emerald-300",
+    dot: "bg-emerald-400",
   },
   offline: {
-    label: 'Offline',
-    tone: 'border-white/10 bg-white/5 text-ink-400',
-    dot: 'bg-ink-500',
+    label: "Offline",
+    tone: "border-white/10 bg-white/5 text-ink-400",
+    dot: "bg-ink-500",
   },
-}
+};
 
 export default function CamerasPage(): React.ReactElement {
-  const cameras = useCamerasStore((s) => s.cameras)
-  const remove = useCamerasStore((s) => s.remove)
-  const [pairOpen, setPairOpen] = useState(false)
-  const [hydrated, setHydrated] = useState(false)
+  const cameras = useCamerasStore((s) => s.cameras);
+  const remove = useCamerasStore((s) => s.remove);
+  const [pairOpen, setPairOpen] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
-  useEffect(() => { setHydrated(true); }, [])
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   const handleDelete = (cam: DemoCamera): void => {
-    if (!confirm(`Remove camera "${cam.name}"?`)) return
-    remove(cam.id)
-  }
+    if (!confirm(`Remove camera "${cam.name}"?`)) return;
+    remove(cam.id);
+  };
 
   return (
     <div className="space-y-5">
@@ -66,7 +68,9 @@ export default function CamerasPage(): React.ReactElement {
           </p>
         </div>
         <button
-          onClick={() => { setPairOpen(true); }}
+          onClick={() => {
+            setPairOpen(true);
+          }}
           className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-2 text-sm font-medium text-ink-950 hover:bg-accent-400"
         >
           <Plus className="h-4 w-4" />
@@ -75,7 +79,11 @@ export default function CamerasPage(): React.ReactElement {
       </header>
 
       {hydrated && cameras.length === 0 ? (
-        <EmptyState onAdd={() => { setPairOpen(true); }} />
+        <EmptyState
+          onAdd={() => {
+            setPairOpen(true);
+          }}
+        />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <AnimatePresence>
@@ -88,27 +96,37 @@ export default function CamerasPage(): React.ReactElement {
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ duration: 0.18 }}
               >
-                <CameraTile cam={cam} onDelete={() => { handleDelete(cam); }} />
+                <CameraTile
+                  cam={cam}
+                  onDelete={() => {
+                    handleDelete(cam);
+                  }}
+                />
               </motion.div>
             ))}
           </AnimatePresence>
         </div>
       )}
 
-      <PairCameraModal open={pairOpen} onClose={() => { setPairOpen(false); }} />
+      <PairCameraModal
+        open={pairOpen}
+        onClose={() => {
+          setPairOpen(false);
+        }}
+      />
     </div>
-  )
+  );
 }
 
 function CameraTile({
   cam,
   onDelete,
 }: {
-  cam: DemoCamera
-  onDelete: () => void
+  cam: DemoCamera;
+  onDelete: () => void;
 }): React.ReactElement {
-  const { label, tone, dot } = statusMap[cam.status]
-  const [menuOpen, setMenuOpen] = useState(false)
+  const { label, tone, dot } = statusMap[cam.status];
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div className="group surface relative overflow-hidden rounded-xl">
@@ -125,7 +143,7 @@ function CameraTile({
           />
         ) : (
           <div className="grid h-full w-full place-items-center bg-grid">
-            {cam.status === 'offline' ? (
+            {cam.status === "offline" ? (
               <WifiOff className="h-10 w-10 text-ink-500" />
             ) : (
               <VideoIcon className="h-10 w-10 text-ink-400" />
@@ -136,15 +154,15 @@ function CameraTile({
         <div className="absolute left-3 top-3 flex items-center gap-2">
           <span
             className={cn(
-              'inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest',
+              "inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-medium uppercase tracking-widest",
               tone,
             )}
           >
             <span
               className={cn(
-                'mr-1.5 inline-block h-1.5 w-1.5 rounded-full',
+                "mr-1.5 inline-block h-1.5 w-1.5 rounded-full",
                 dot,
-                cam.status === 'live' && 'animate-pulse',
+                cam.status === "live" && "animate-pulse",
               )}
             />
             {label}
@@ -165,7 +183,9 @@ function CameraTile({
         </div>
       </Link>
       <button
-        onClick={() => { setMenuOpen((o) => !o); }}
+        onClick={() => {
+          setMenuOpen((o) => !o);
+        }}
         className="absolute right-2 top-2 rounded-md border border-white/10 bg-ink-900/80 p-1 text-ink-300 opacity-0 transition-opacity group-hover:opacity-100 hover:text-white"
         aria-label="Camera menu"
       >
@@ -176,15 +196,17 @@ function CameraTile({
           <Link
             href={`/cameras/${encodeURIComponent(cam.id)}/zones`}
             className="flex items-center gap-2 px-3 py-2 text-ink-200 hover:bg-white/5"
-            onClick={() => { setMenuOpen(false); }}
+            onClick={() => {
+              setMenuOpen(false);
+            }}
           >
             <Pencil className="h-3.5 w-3.5" />
             Edit zones
           </Link>
           <button
             onClick={() => {
-              setMenuOpen(false)
-              onDelete()
+              setMenuOpen(false);
+              onDelete();
             }}
             className="flex w-full items-center gap-2 px-3 py-2 text-severity-critical hover:bg-severity-critical/10"
           >
@@ -194,7 +216,7 @@ function CameraTile({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function EmptyState({ onAdd }: { onAdd: () => void }): React.ReactElement {
@@ -217,5 +239,5 @@ function EmptyState({ onAdd }: { onAdd: () => void }): React.ReactElement {
         Pair your first camera
       </button>
     </div>
-  )
+  );
 }

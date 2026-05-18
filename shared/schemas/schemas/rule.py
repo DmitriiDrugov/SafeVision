@@ -61,5 +61,7 @@ class Rule(BaseModel):
     @classmethod
     def name_must_be_snake_case(cls, v: str) -> str:
         if not re.match(r"^[a-z][a-z0-9_]*$", v):
-            raise ValueError("Rule name must be snake_case (lowercase letters, digits, underscores)")
+            raise ValueError(
+                "Rule name must be snake_case (lowercase letters, digits, underscores)"
+            )
         return v

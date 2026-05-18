@@ -25,4 +25,4 @@ class Incident(BaseModel):
     acknowledged_by: str | None = None
     acknowledged_at: datetime | None = None
     clip_url: str | None = None
-    detection_payload: dict
+    detection_payload: dict[str, object]

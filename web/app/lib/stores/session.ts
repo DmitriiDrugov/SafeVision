@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
-import type { AuthUser } from '@/lib/auth'
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import type { AuthUser } from "@/lib/auth";
 
 /**
  * Demo-mode session state — entirely client-side. The cookie set by
@@ -10,8 +10,8 @@ import type { AuthUser } from '@/lib/auth'
  * store mirrors the user shape for UI rendering.
  */
 interface SessionState {
-  user: AuthUser | null
-  setUser: (user: AuthUser | null) => void
+  user: AuthUser | null;
+  setUser: (user: AuthUser | null) => void;
 }
 
 export const useSessionStore = create<SessionState>()(
@@ -21,8 +21,8 @@ export const useSessionStore = create<SessionState>()(
       setUser: (user) => set({ user }),
     }),
     {
-      name: 'sv:session',
+      name: "sv:session",
       storage: createJSONStorage(() => localStorage),
     },
   ),
-)
+);
