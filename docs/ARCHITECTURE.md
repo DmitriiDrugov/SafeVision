@@ -9,9 +9,14 @@ The high-level data flow and architecture diagram lives in the [project README](
 | Ingestion | RTSP decode, FPS sampling, frame publish to shared memory + Redis Stream | No (config-driven) |
 | Inference | YOLOv8 detection + ByteTrack tracking | Yes (in-memory tracker state per camera) |
 | Rule Engine | Evaluate YAML rules against detections | Yes (in-memory duration counters; non-persistent) |
-| Incident | Persist incidents, store clips, REST + WebSocket API | Yes (Postgres + MinIO) |
-| Notification | Webhook routing, dead-letter retry | Yes (Redis DLQ) |
-| Web App | UI + LLM rule builder proxy | No |
+| Incident | Persist incidents, store clips, REST API | Yes (Postgres + MinIO) |
+| Web App | UI + LLM rule builder proxy; in demo mode runs inference and rules in the browser | No |
+
+## Incident Surfacing
+
+Incidents are observed **exclusively** in the SafeVision web UI — there is no
+WhatsApp, email, or webhook channel. The Incident Service exposes a REST API
+for incident CRUD and an audit log; the dashboard polls / streams from there.
 
 ## Stream Topics
 
@@ -19,8 +24,7 @@ The high-level data flow and architecture diagram lives in the [project README](
 |---|---|---|---|
 | `frames.raw` | Ingestion | Inference | `safevision-proto.FrameEvent` |
 | `detections.frame` | Inference | Rule Engine | `safevision-proto.DetectionStreamEvent` |
-| `events.violation` | Rule Engine | Incident, Notification | `safevision-proto.ViolationStreamEvent` |
-| `notifications.dlq` | Notification | Notification (retry loop) | Raw ViolationEvent JSON |
+| `events.violation` | Rule Engine | Incident | `safevision-proto.ViolationStreamEvent` |
 
 All streams use Redis consumer groups for at-least-once delivery semantics. MAXLEN trim policies prevent unbounded growth — see service READMEs.
 
@@ -44,32 +48,34 @@ Video never leaves the plant. Only:
 
 ## Trace Propagation
 
-OpenTelemetry trace IDs are propagated through Redis Stream message headers. Each service extracts the parent context, creates a child span, and re-injects on emit. End-to-end traces from frame ingest → notification webhook are visible in the OTLP backend.
+OpenTelemetry trace IDs are propagated through Redis Stream message headers. Each service extracts the parent context, creates a child span, and re-injects on emit. End-to-end traces from frame ingest → incident persistence are visible in the OTLP backend.
 
 ## Sequence Diagrams
 
-### Happy path: frame → violation → notification
+### Happy path: frame → violation → incident
 
 ```
-Ingestion          Inference          Rule Engine        Incident           Notification
-    |                  |                   |                  |                   |
-    | XADD frames.raw  |                   |                  |                   |
-    |  (SHM ref)       |                   |                  |                   |
-    |----------------->|                   |                  |                   |
-    |                  | read SHM          |                  |                   |
-    |                  | detect+track      |                  |                   |
-    |                  | XADD detections   |                  |                   |
-    |                  |------------------>|                  |                   |
-    |                  | XACK frames.raw   |                  |                   |
-    |                  |                   | evaluate rules   |                   |
-    |                  |                   | (match found)    |                   |
-    |                  |                   | XADD events.     |                   |
-    |                  |                   |  violation       |                   |
-    |                  |                   |----------------->|                   |
-    |                  |                   |                  |----------------->|
-    |                  |                   | XACK detections  | persist to DB    | POST n8n
-    |                  |                   |                  | broadcast WS     | webhook
-    |                  |                   |                  | XACK violation   |
+Ingestion          Inference          Rule Engine        Incident
+    |                  |                   |                  |
+    | XADD frames.raw  |                   |                  |
+    |  (SHM ref)       |                   |                  |
+    |----------------->|                   |                  |
+    |                  | read SHM          |                  |
+    |                  | detect+track      |                  |
+    |                  | XADD detections   |                  |
+    |                  |------------------>|                  |
+    |                  | XACK frames.raw   |                  |
+    |                  |                   | evaluate rules   |
+    |                  |                   | (match found)    |
+    |                  |                   | XADD events.     |
+    |                  |                   |  violation       |
+    |                  |                   |----------------->|
+    |                  |                   |                  | persist to DB
+    |                  |                   |                  | upload clip → MinIO
+    |                  |                   |                  | (incident appears
+    |                  |                   |                  |  in web UI next poll
+    |                  |                   |                  |  or via REST)
+    |                  |                   | XACK detections  | XACK violation
 ```
 
 ### Rule hot-reload
@@ -111,8 +117,7 @@ Operator (browser)          Web App              Incident Service         Postgr
         |                      |      200 IncidentOut  |                     |
         |                      |<----------------------|                     |
         | 200 (updated row)    |                       |                     |
-        |<---------------------|   WS broadcast to     |                     |
-        |                      |   all dashboard tabs  |                     |
+        |<---------------------|                       |                     |
 ```
 
 ## Backpressure
@@ -126,6 +131,23 @@ When Inference falls behind Ingestion:
 
 To add backpressure instead of dropping: configure Ingestion to block on the queue (`asyncio.Queue(maxsize=10)` is already in the thread bridge — the SHM queue fills up, and the PyAV decode thread blocks on `fut.result(timeout=5.0)`).
 
+## Demo Mode (Vercel)
+
+The Next.js app ships a second runtime path that mirrors the full pipeline in
+the browser, with no Python services running:
+
+- WebRTC pairs a phone camera to the desktop via the PeerJS public broker.
+- A Web Worker runs YOLOv8n ONNX (via `onnxruntime-web`) against frames pulled
+  from the `<video>` element at ~5 fps.
+- A TypeScript port of the rule evaluator (`web/app/lib/rules/evaluator.ts`)
+  consumes detections, applies duration / cooldown gates, and records
+  incidents (with a thumbnail) into IndexedDB and a Zustand store.
+- The dashboard, incidents page, and rule editor all read from those stores,
+  so the UX is identical to the connected-backend path.
+
+Demo mode is the deployed showcase. The Python services are the production
+deployment path.
+
 ## Multi-plant Topology
 
 ```
@@ -133,7 +155,6 @@ Plant A                               Plant B
 ┌──────────────────────────────┐      ┌──────────────────────────────┐
 │  Ingestion → Inference       │      │  Ingestion → Inference       │
 │  Rule Engine → Incident      │      │  Rule Engine → Incident      │
-│  Notification → n8n          │      │  Notification → n8n          │
 │  Redis (local)               │      │  Redis (local)               │
 │  Postgres (local)            │      │  Postgres (local)            │
 └────────────┬─────────────────┘      └─────────────────┬────────────┘

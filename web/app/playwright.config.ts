@@ -39,15 +39,18 @@ export default defineConfig({
   ],
 
   webServer: {
+    // `npm run start` emits a warning under `output: 'standalone'` but still
+    // serves the page-router app correctly for our E2E needs. Switching to
+    // `node .next/standalone/server.js` would require copying static assets,
+    // which `npm run build` doesn't do automatically.
     command: 'npm run start',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: {
-      // Dummy values — API calls are mocked in tests via page.route()
-      NEXT_PUBLIC_API_URL: 'http://localhost:8004',
-      NEXT_PUBLIC_RULES_API_URL: 'http://localhost:8003',
-      NEXT_PUBLIC_WS_URL: 'ws://localhost:8005/ws/incidents',
+      // Demo mode — tests exercise the frontend-only showcase path.
+      NEXT_PUBLIC_DEMO_MODE: 'true',
+      NEXT_PUBLIC_API_URL: '',
     },
   },
 })

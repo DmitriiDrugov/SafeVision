@@ -34,11 +34,17 @@ export function clearToken(): void {
 
 // ── JWT parsing (client-side, no signature verification) ─────────────────
 
+interface JwtPayload {
+  sub?: string
+  role?: AuthUser['role']
+  exp?: number
+}
+
 export function parseUser(token: string): AuthUser | null {
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
+    const payload = JSON.parse(atob(token.split('.')[1])) as JwtPayload
     if (!payload.sub || !payload.role) return null
-    const expMs = payload.exp * 1000
+    const expMs = (payload.exp ?? 0) * 1000
     if (Date.now() > expMs) return null
     return { username: payload.sub, role: payload.role }
   } catch {
@@ -60,7 +66,9 @@ export async function login(username: string, password: string): Promise<AuthUse
     body: JSON.stringify({ username, password }),
   })
   if (!resp.ok) {
-    const body = await resp.json().catch(() => ({ detail: resp.statusText }))
+    const body = (await resp.json().catch(() => ({ detail: resp.statusText }))) as {
+      detail?: string
+    }
     throw new Error(body.detail ?? 'Login failed')
   }
   const data = (await resp.json()) as {

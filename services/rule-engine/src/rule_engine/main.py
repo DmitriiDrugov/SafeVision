@@ -12,10 +12,11 @@ import os
 import socket
 import sys
 import threading
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Annotated, Any, AsyncIterator
+from typing import Any
 
 import redis.asyncio as aioredis
 import structlog
@@ -23,12 +24,11 @@ import yaml
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
-from pydantic import BaseModel, ValidationError
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
-
 from proto.detections import DetectionStreamEvent
 from proto.otel import setup_otel
 from proto.violations import ViolationStreamEvent
+from pydantic import BaseModel, ValidationError
 from schemas.event import ViolationEvent
 from schemas.rule import Rule
 
@@ -123,7 +123,7 @@ async def _stream_consumer(
 
                     message_count += 1
                     if message_count % _EVICT_EVERY_N == 0:
-                        state.evict_stale(datetime.now(tz=timezone.utc))
+                        state.evict_stale(datetime.now(tz=UTC))
 
         except asyncio.CancelledError:
             logger.info("rule_engine.consumer.stopped")

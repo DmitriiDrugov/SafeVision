@@ -169,22 +169,6 @@ incident:
   # Evidence clips are deleted from MinIO after this many days (0 = never expire).
   clipRetentionDays: 90
 
-# ── Notification Service ──────────────────────────────────────────────────────
-notification:
-  replicaCount: 1
-  image:
-    repository: notification
-    tag: ""
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 500m
-      memory: 256Mi
-  n8nWhatsappWebhookUrl: ""
-  n8nEmailWebhookUrl: ""
-
 # ── Web / Config UI ───────────────────────────────────────────────────────────
 web:
   replicaCount: 1

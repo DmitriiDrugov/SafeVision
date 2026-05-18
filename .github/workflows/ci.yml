@@ -44,7 +44,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: web/app/package-lock.json
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
         working-directory: web/app
       - name: eslint
         run: npm run lint
@@ -61,7 +61,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [ingestion, inference, rule-engine, incident, notification]
+        service: [ingestion, inference, rule-engine, incident]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -105,7 +105,6 @@ jobs:
           pip install -e shared/proto
           pip install -e "services/rule-engine[dev]"
           pip install -e "services/incident[dev]"
-          pip install -e "services/notification[dev]"
           pip install \
             pytest pytest-asyncio \
             "redis[hiredis]>=5.0" \
@@ -133,7 +132,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: web/app/package-lock.json
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
         working-directory: web/app
       - name: vitest
         run: npm run test
@@ -152,7 +151,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: web/app/package-lock.json
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
         working-directory: web/app
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
@@ -161,9 +160,8 @@ jobs:
         run: npm run build
         working-directory: web/app
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:8004
-          NEXT_PUBLIC_RULES_API_URL: http://localhost:8003
-          NEXT_PUBLIC_WS_URL: ws://localhost:8005/ws/incidents
+          NEXT_PUBLIC_DEMO_MODE: "true"
+          NEXT_PUBLIC_API_URL: ""
       - name: Run Playwright tests
         run: npm run test:e2e
         working-directory: web/app
@@ -199,9 +197,6 @@ jobs:
           - service: incident
             context: .
             dockerfile: services/incident/Dockerfile
-          - service: notification
-            context: .
-            dockerfile: services/notification/Dockerfile
           - service: web
             context: .
             dockerfile: web/app/Dockerfile

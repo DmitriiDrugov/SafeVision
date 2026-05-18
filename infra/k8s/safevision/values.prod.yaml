@@ -67,9 +67,6 @@ ruleEngine:
 incident:
   replicaCount: 2
 
-notification:
-  replicaCount: 2
-
 web:
   replicaCount: 2
 

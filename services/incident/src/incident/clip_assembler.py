@@ -13,7 +13,7 @@ from __future__ import annotations
 import asyncio
 import os
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import structlog
@@ -42,7 +42,7 @@ class ClipAssembler:
         event_ts = detected_at.timestamp()
 
         # Wait until the post-event window has elapsed so those frames are on disk
-        wait = max(0.0, (event_ts + POST_SEC) - datetime.now(tz=timezone.utc).timestamp())
+        wait = max(0.0, (event_ts + POST_SEC) - datetime.now(tz=UTC).timestamp())
         if wait > 0:
             await asyncio.sleep(wait)
 

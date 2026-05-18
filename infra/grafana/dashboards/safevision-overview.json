@@ -4,41 +4,77 @@
   "schemaVersion": 39,
   "version": 1,
   "refresh": "15s",
-  "time": { "from": "now-1h", "to": "now" },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
   "timezone": "browser",
-  "tags": ["safevision"],
-  "templating": { "list": [] },
-  "annotations": { "list": [] },
+  "tags": [
+    "safevision"
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
   "panels": [
-
     {
       "id": 1,
       "type": "row",
       "title": "System Health",
-      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 1 },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
       "collapsed": false
     },
-
     {
       "id": 2,
       "type": "stat",
       "title": "Violations (last 1 h)",
-      "gridPos": { "x": 0, "y": 1, "w": 4, "h": 4 },
-      "datasource": { "uid": "prometheus" },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "prometheus"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 10 },
-              { "color": "red", "value": 100 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 10
+              },
+              {
+                "color": "red",
+                "value": 100
+              }
             ]
           }
         }
       },
-      "options": { "reduceOptions": { "calcs": ["sum"] } },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ]
+        }
+      },
       "targets": [
         {
           "expr": "sum(increase(rule_engine_violations_total[1h]))",
@@ -46,27 +82,50 @@
         }
       ]
     },
-
     {
       "id": 3,
       "type": "stat",
       "title": "Incidents Created (last 1 h)",
-      "gridPos": { "x": 4, "y": 1, "w": 4, "h": 4 },
-      "datasource": { "uid": "prometheus" },
+      "gridPos": {
+        "x": 4,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "prometheus"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 5 },
-              { "color": "red", "value": 50 }
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 50
+              }
             ]
           }
         }
       },
-      "options": { "reduceOptions": { "calcs": ["sum"] } },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ]
+        }
+      },
       "targets": [
         {
           "expr": "sum(increase(incident_created_total[1h]))",
@@ -74,54 +133,46 @@
         }
       ]
     },
-
-    {
-      "id": 4,
-      "type": "stat",
-      "title": "DLQ Depth",
-      "gridPos": { "x": 8, "y": 1, "w": 4, "h": 4 },
-      "datasource": { "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 1 },
-              { "color": "red", "value": 10 }
-            ]
-          }
-        }
-      },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "targets": [
-        {
-          "expr": "notification_dlq_depth",
-          "legendFormat": "DLQ depth"
-        }
-      ]
-    },
-
     {
       "id": 5,
       "type": "stat",
       "title": "Active Camera Streams",
-      "gridPos": { "x": 12, "y": 1, "w": 4, "h": 4 },
-      "datasource": { "uid": "prometheus" },
+      "gridPos": {
+        "x": 12,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "prometheus"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "red", "value": null },
-              { "color": "green", "value": 1 }
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
             ]
           }
         }
       },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
       "targets": [
         {
           "expr": "ingestion_active_streams",
@@ -129,26 +180,46 @@
         }
       ]
     },
-
     {
       "id": 6,
       "type": "stat",
       "title": "Rules Loaded",
-      "gridPos": { "x": 16, "y": 1, "w": 4, "h": 4 },
-      "datasource": { "uid": "prometheus" },
+      "gridPos": {
+        "x": 16,
+        "y": 1,
+        "w": 4,
+        "h": 4
+      },
+      "datasource": {
+        "uid": "prometheus"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "yellow", "value": null },
-              { "color": "green", "value": 1 }
+              {
+                "color": "yellow",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
             ]
           }
         }
       },
-      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
       "targets": [
         {
           "expr": "rule_engine_rules_loaded",
@@ -156,31 +227,105 @@
         }
       ]
     },
-
     {
       "id": 7,
       "type": "row",
       "title": "Violations",
-      "gridPos": { "x": 0, "y": 5, "w": 24, "h": 1 },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 24,
+        "h": 1
+      },
       "collapsed": false
     },
-
     {
       "id": 8,
       "type": "timeseries",
       "title": "Violations / min by Severity",
-      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 8 },
-      "datasource": { "uid": "prometheus" },
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "uid": "prometheus"
+      },
       "fieldConfig": {
-        "defaults": { "custom": { "lineWidth": 2 } },
+        "defaults": {
+          "custom": {
+            "lineWidth": 2
+          }
+        },
         "overrides": [
-          { "matcher": { "id": "byName", "options": "critical" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "high" }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "medium" }, "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }] },
-          { "matcher": { "id": "byName", "options": "low" }, "properties": [{ "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }] }
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "critical"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "high"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "medium"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "low"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
         ]
       },
-      "options": { "tooltip": { "mode": "multi" } },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
       "targets": [
         {
           "expr": "sum by (severity) (rate(rule_engine_violations_total[1m])) * 60",
@@ -188,14 +333,24 @@
         }
       ]
     },
-
     {
       "id": 9,
       "type": "timeseries",
       "title": "Violations / min by Rule",
-      "gridPos": { "x": 12, "y": 6, "w": 12, "h": 8 },
-      "datasource": { "uid": "prometheus" },
-      "options": { "tooltip": { "mode": "multi" } },
+      "gridPos": {
+        "x": 12,
+        "y": 6,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "uid": "prometheus"
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
       "targets": [
         {
           "expr": "topk(10, sum by (rule_name) (rate(rule_engine_violations_total[1m]))) * 60",
@@ -203,21 +358,31 @@
         }
       ]
     },
-
     {
       "id": 10,
       "type": "row",
       "title": "Pipeline Throughput",
-      "gridPos": { "x": 0, "y": 14, "w": 24, "h": 1 },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 24,
+        "h": 1
+      },
       "collapsed": false
     },
-
     {
       "id": 11,
       "type": "timeseries",
       "title": "Frames Ingested / sec",
-      "gridPos": { "x": 0, "y": 15, "w": 8, "h": 7 },
-      "datasource": { "uid": "prometheus" },
+      "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "expr": "sum by (camera_id) (rate(ingestion_frames_published_total[1m]))",
@@ -225,15 +390,23 @@
         }
       ]
     },
-
     {
       "id": 12,
       "type": "timeseries",
       "title": "Inference Latency (p50 / p95 / p99)",
-      "gridPos": { "x": 8, "y": 15, "w": 8, "h": 7 },
-      "datasource": { "uid": "prometheus" },
+      "gridPos": {
+        "x": 8,
+        "y": 15,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "prometheus"
+      },
       "fieldConfig": {
-        "defaults": { "unit": "s" }
+        "defaults": {
+          "unit": "s"
+        }
       },
       "targets": [
         {
@@ -250,13 +423,19 @@
         }
       ]
     },
-
     {
       "id": 13,
       "type": "timeseries",
       "title": "Active Tracks per Camera",
-      "gridPos": { "x": 16, "y": 15, "w": 8, "h": 7 },
-      "datasource": { "uid": "prometheus" },
+      "gridPos": {
+        "x": 16,
+        "y": 15,
+        "w": 8,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "expr": "inference_active_tracks",
@@ -264,95 +443,31 @@
         }
       ]
     },
-
-    {
-      "id": 14,
-      "type": "row",
-      "title": "Notifications",
-      "gridPos": { "x": 0, "y": 22, "w": 24, "h": 1 },
-      "collapsed": false
-    },
-
-    {
-      "id": 15,
-      "type": "timeseries",
-      "title": "Notifications Sent / Failed per Minute",
-      "gridPos": { "x": 0, "y": 23, "w": 12, "h": 7 },
-      "datasource": { "uid": "prometheus" },
-      "fieldConfig": {
-        "overrides": [
-          { "matcher": { "id": "byRegexp", "options": "failed.*" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] }
-        ]
-      },
-      "targets": [
-        {
-          "expr": "sum by (channel) (rate(notifications_sent_total[1m])) * 60",
-          "legendFormat": "sent / {{ channel }}"
-        },
-        {
-          "expr": "sum by (channel) (rate(notifications_failed_total[1m])) * 60",
-          "legendFormat": "failed / {{ channel }}"
-        }
-      ]
-    },
-
-    {
-      "id": 16,
-      "type": "timeseries",
-      "title": "DLQ Depth",
-      "gridPos": { "x": 12, "y": 23, "w": 6, "h": 7 },
-      "datasource": { "uid": "prometheus" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "thresholds" },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 1 },
-              { "color": "red", "value": 10 }
-            ]
-          },
-          "custom": { "lineWidth": 2 }
-        }
-      },
-      "targets": [
-        {
-          "expr": "notification_dlq_depth",
-          "legendFormat": "DLQ depth"
-        }
-      ]
-    },
-
-    {
-      "id": 17,
-      "type": "timeseries",
-      "title": "Webhook Delivery Latency p95",
-      "gridPos": { "x": 18, "y": 23, "w": 6, "h": 7 },
-      "datasource": { "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "s" } },
-      "targets": [
-        {
-          "expr": "histogram_quantile(0.95, sum by (channel, le) (rate(notification_delivery_duration_seconds_bucket[5m])))",
-          "legendFormat": "p95 / {{ channel }}"
-        }
-      ]
-    },
-
     {
       "id": 18,
       "type": "row",
       "title": "Incidents",
-      "gridPos": { "x": 0, "y": 30, "w": 24, "h": 1 },
+      "gridPos": {
+        "x": 0,
+        "y": 30,
+        "w": 24,
+        "h": 1
+      },
       "collapsed": false
     },
-
     {
       "id": 19,
       "type": "timeseries",
       "title": "Incidents Created / min by Severity",
-      "gridPos": { "x": 0, "y": 31, "w": 12, "h": 7 },
-      "datasource": { "uid": "prometheus" },
+      "gridPos": {
+        "x": 0,
+        "y": 31,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "expr": "sum by (severity) (rate(incident_created_total[1m])) * 60",
@@ -360,13 +475,19 @@
         }
       ]
     },
-
     {
       "id": 20,
       "type": "timeseries",
       "title": "Incident Lifecycle Actions / min",
-      "gridPos": { "x": 12, "y": 31, "w": 12, "h": 7 },
-      "datasource": { "uid": "prometheus" },
+      "gridPos": {
+        "x": 12,
+        "y": 31,
+        "w": 12,
+        "h": 7
+      },
+      "datasource": {
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "expr": "sum(rate(incident_acknowledged_total[1m])) * 60",
@@ -382,6 +503,5 @@
         }
       ]
     }
-
   ]
 }

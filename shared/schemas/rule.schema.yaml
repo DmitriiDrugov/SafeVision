@@ -29,11 +29,8 @@ rule:
     # What the Rule Engine should do when condition is met.
     type: alert | log | block
 
-    # Severity level for the generated incident and notification.
+    # Severity level for the generated incident (shown in the web UI).
     severity: low | medium | high | critical
-
-    # Notification channel(s) to route the alert to.
-    channel: whatsapp | email | dashboard | all
 
   # Whether this rule is actively evaluated. Can be toggled without deleting the rule.
   enabled: true | false

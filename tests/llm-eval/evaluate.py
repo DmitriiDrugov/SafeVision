@@ -1,7 +1,7 @@
 """Semantic equivalence check between two Rule objects.
 
 Compares the fields that matter for correctness:
-zone, condition (all sub-fields), action (type, severity, channel).
+zone, condition (all sub-fields), action (type, severity).
 Rule name is intentionally excluded — any valid snake_case name is accepted.
 """
 from __future__ import annotations
@@ -55,12 +55,6 @@ def rules_equivalent(generated: Rule, expected: Rule) -> tuple[bool, list[str]]:
         mismatches.append(
             f"action.severity: got {generated.action.severity!r}, "
             f"expected {expected.action.severity!r}"
-        )
-
-    if generated.action.channel != expected.action.channel:
-        mismatches.append(
-            f"action.channel: got {generated.action.channel!r}, "
-            f"expected {expected.action.channel!r}"
         )
 
     return len(mismatches) == 0, mismatches

@@ -31,13 +31,6 @@ class Severity(str, Enum):
     critical = "critical"
 
 
-class Channel(str, Enum):
-    whatsapp = "whatsapp"
-    email = "email"
-    dashboard = "dashboard"
-    all = "all"
-
-
 class RuleActionKind(str, Enum):
     alert = "alert"
     log = "log"
@@ -55,7 +48,6 @@ class RuleCondition(BaseModel):
 class RuleAction(BaseModel):
     type: RuleActionKind
     severity: Severity
-    channel: Channel
 
 
 class Rule(BaseModel):

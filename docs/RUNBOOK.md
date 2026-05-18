@@ -18,13 +18,6 @@ cp infra/docker-compose/.env.example infra/docker-compose/.env
 docker compose -f infra/docker-compose/docker-compose.yml up -d
 ```
 
-After first boot, create the n8n database (one-time):
-
-```bash
-docker exec -it safevision-postgres-1 createdb -U safevision n8n
-docker compose -f infra/docker-compose/docker-compose.yml restart n8n
-```
-
 Verify all services are healthy:
 
 ```bash
@@ -38,7 +31,6 @@ Access points:
 | SafeVision Config UI | http://localhost:3000 |
 | Grafana | http://localhost:3001 (admin / see .env) |
 | Prometheus | http://localhost:9090 |
-| n8n | http://localhost:5678 |
 | MinIO Console | http://localhost:9001 |
 
 ### Production (single plant)
@@ -118,7 +110,7 @@ GPU-bound. One RTX 3060 handles ~8 1080p streams at 5 fps with YOLOv8n. To scale
 CPU-bound but very lightweight. Scale only if rule count exceeds ~500. Redis
 consumer groups allow parallel evaluation across replicas automatically.
 
-### Incident / Notification
+### Incident
 
 FastAPI + asyncio scales well; bottleneck is Postgres for writes. Add read replicas
 and point `DATABASE_URL` to the replica for the list/get endpoints if dashboard
@@ -196,34 +188,19 @@ Example — a zone covering the lower-left quarter:
 {"id": "loading_dock", "name": "Loading Dock", "polygon": [[0,0.5],[0.5,0.5],[0.5,1],[0,1]]}
 ```
 
-## n8n Notification Workflows
-
-See **[docs/N8N-WORKFLOWS.md](N8N-WORKFLOWS.md)** for the full setup guide
-including workflow import, credential configuration, variable definitions, and
-end-to-end testing.
-
-Pre-built importable workflows:
-- `infra/n8n/workflows/safevision-whatsapp-alerts.json` — Twilio WhatsApp
-- `infra/n8n/workflows/safevision-email-alerts.json` — SMTP email
-
-Quick start after workflow import:
-
-1. Activate each workflow in n8n and copy the Production Webhook URL.
-2. Set the URLs in `.env`:
-   ```
-   N8N_WHATSAPP_WEBHOOK_URL=https://n8n-host/webhook/safevision-whatsapp
-   N8N_EMAIL_WEBHOOK_URL=https://n8n-host/webhook/safevision-email
-   ```
-3. `docker compose restart notification`
-
 ## Incident Response Playbook
+
+All incidents surface in the SafeVision web UI — there is no WhatsApp / email
+out-of-band notification channel. Operators are expected to monitor the
+dashboard (or have it open as a wallboard); paging integrations, if needed,
+should be wired downstream of the Incident Service REST API or PostgreSQL.
 
 ### Severity handling
 
 | Severity | SLA | First action |
 |---|---|---|
-| `critical` | 5 min | Plant safety officer paged via WhatsApp |
-| `high` | 15 min | Supervisor notified via WhatsApp |
+| `critical` | 5 min | Plant safety officer notified by dashboard banner; supervisor on shift acknowledges |
+| `high` | 15 min | Supervisor acknowledges via dashboard |
 | `medium` | 60 min | Operator reviews via dashboard |
 | `low` | Next shift | Logged; reviewed in daily safety report |
 
@@ -247,10 +224,11 @@ Quick start after workflow import:
 
 ### After-hours escalation
 
-If a `critical` incident is not acknowledged within 5 minutes:
-- n8n escalation workflow triggers a second WhatsApp message to the on-call supervisor.
-- After 15 minutes without acknowledgement, n8n sends an SMS/email to the plant manager.
-- Configure the escalation workflow in n8n at `http://<host>:5678`.
+The platform itself does not send escalations — incidents stay `open` until
+operators triage them. For after-hours coverage, wire an external watcher
+against the Incident Service REST API (e.g., a cron job that calls
+`GET /api/v1/incidents?status=open&severity=critical` and pages whoever is
+on-call). The SLA expectations above remain the operator-facing contract.
 
 ## Alerting Playbook
 
@@ -265,21 +243,6 @@ Prometheus alerting rules live in `infra/docker-compose/alerts/safevision.yml`.
 | `SafeVisionStreamReconnectLoop` | Reconnect rate > 0.5/s | Camera stream unstable; check network/RTSP config |
 | `SafeVisionHighInferenceLatency` | p95 > 500 ms for 5 min | GPU memory pressure; reduce batch size or add GPU |
 | `SafeVisionHighViolationRate` | > 100 violations/min for 5 min | Likely misconfigured rule — review and tighten condition |
-| `SafeVisionDLQHigh` | DLQ depth > 10 for 5 min | n8n webhook failing — check n8n logs and endpoint config |
-| `SafeVisionDLQCritical` | DLQ depth > 100 | Notifications completely backed up — treat as incident |
-
-### Checking the DLQ
-
-```bash
-# Count events stuck in the DLQ
-docker exec safevision-redis-1 redis-cli llen notifications.dlq
-
-# Inspect top item without removing
-docker exec safevision-redis-1 redis-cli lindex notifications.dlq 0
-
-# Manually drain after fixing the webhook
-curl -X POST http://localhost:8005/api/v1/dlq/retry
-```
 
 ## Database Migrations (Alembic)
 

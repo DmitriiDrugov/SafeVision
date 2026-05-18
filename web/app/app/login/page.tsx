@@ -2,18 +2,22 @@
 
 import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { ArrowRight, Loader2, Radio, ShieldCheck } from 'lucide-react'
 import { login } from '@/lib/auth'
+import { startDemoSession } from '@/lib/demo-auth'
+import { isDemoMode } from '@/lib/env'
 
-function LoginForm() {
+function LoginForm(): React.ReactElement {
   const router = useRouter()
   const params = useSearchParams()
   const next = params.get('next') ?? '/'
+  const demo = isDemoMode()
 
   const [form, setForm] = useState({ username: '', password: '' })
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
+  const submit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault()
     setLoading(true)
     setError(null)
@@ -28,70 +32,101 @@ function LoginForm() {
     }
   }
 
+  const enterDemo = (): void => {
+    startDemoSession('demo', 'admin')
+    router.push(next)
+    router.refresh()
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">
-          Username
-        </label>
-        <input
-          type="text"
-          autoComplete="username"
-          value={form.username}
-          onChange={(e) =>
-            setForm((f) => ({ ...f, username: e.target.value }))
-          }
-          required
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-        />
-      </div>
-
-      <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">
-          Password
-        </label>
-        <input
-          type="password"
-          autoComplete="current-password"
-          value={form.password}
-          onChange={(e) =>
-            setForm((f) => ({ ...f, password: e.target.value }))
-          }
-          required
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-        />
-      </div>
-
-      {error && (
-        <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
-        </p>
+    <>
+      {demo && (
+        <button
+          onClick={enterDemo}
+          className="group mb-5 flex w-full items-center justify-between gap-2 rounded-lg border border-accent/40 bg-accent/10 px-4 py-3 text-left transition-colors hover:bg-accent/15"
+        >
+          <div>
+            <div className="flex items-center gap-2 text-sm font-semibold text-accent">
+              <ShieldCheck className="h-4 w-4" />
+              Try the demo
+            </div>
+            <p className="mt-0.5 text-xs text-ink-300">
+              Skip authentication and open the demo workspace — runs entirely
+              in your browser.
+            </p>
+          </div>
+          <ArrowRight className="h-4 w-4 text-accent transition-transform group-hover:translate-x-0.5" />
+        </button>
       )}
+      <form onSubmit={(e) => void submit(e)} className="space-y-3">
+        <label className="block">
+          <span className="mb-1 block text-[10px] font-medium uppercase tracking-widest text-ink-400">
+            Username
+          </span>
+          <input
+            type="text"
+            autoComplete="username"
+            value={form.username}
+            onChange={(e) =>
+              { setForm((f) => ({ ...f, username: e.target.value })); }
+            }
+            required
+            className="w-full rounded-md surface-input px-3 py-2 text-sm"
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-[10px] font-medium uppercase tracking-widest text-ink-400">
+            Password
+          </span>
+          <input
+            type="password"
+            autoComplete="current-password"
+            value={form.password}
+            onChange={(e) =>
+              { setForm((f) => ({ ...f, password: e.target.value })); }
+            }
+            required
+            className="w-full rounded-md surface-input px-3 py-2 text-sm"
+          />
+        </label>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-lg bg-blue-600 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-      >
-        {loading ? 'Signing in…' : 'Sign in'}
-      </button>
-    </form>
+        {error && (
+          <p className="rounded-md border border-severity-critical/30 bg-severity-critical/10 px-3 py-2 text-xs text-severity-critical">
+            {error}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-accent py-2.5 text-sm font-semibold text-ink-950 hover:bg-accent-400 disabled:opacity-50"
+        >
+          {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+          {loading ? 'Signing in…' : 'Sign in'}
+        </button>
+      </form>
+    </>
   )
 }
 
-export default function LoginPage() {
+export default function LoginPage(): React.ReactElement {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100">
-      <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-lg">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-800">
-            SafeVision
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Industrial Safety Platform
-          </p>
+    <div className="flex min-h-screen items-center justify-center bg-ink-950 bg-grid px-4">
+      <div className="w-full max-w-sm rounded-2xl border border-white/5 bg-ink-900/80 p-8 shadow-panel backdrop-blur">
+        <div className="mb-7 flex items-center gap-3">
+          <span className="relative grid h-10 w-10 place-items-center rounded-lg bg-accent/15 text-accent">
+            <Radio className="h-5 w-5" />
+            <span className="absolute inset-0 animate-pulseRing rounded-lg" />
+          </span>
+          <div>
+            <div className="text-base font-semibold tracking-tight text-white">
+              SafeVision
+            </div>
+            <div className="text-[10px] uppercase tracking-widest text-ink-400">
+              Industrial Safety Platform
+            </div>
+          </div>
         </div>
-
         <Suspense fallback={<div className="h-48" />}>
           <LoginForm />
         </Suspense>

@@ -35,11 +35,6 @@ scrape_configs:
     static_configs:
       - targets: ["incident:8006"]
 
-  - job_name: notification
-    metrics_path: /metrics
-    static_configs:
-      - targets: ["notification:8007"]
-
   # ─── MinIO metrics ────────────────────────────────────────────────────────
   - job_name: minio
     metrics_path: /minio/v2/metrics/cluster

@@ -9,5 +9,4 @@ rule:
   action:
     type: alert
     severity: medium
-    channel: dashboard
   enabled: true

@@ -5,8 +5,6 @@ import threading
 import time
 from pathlib import Path
 
-import pytest
-
 from rule_engine.loader import RuleLoader
 
 _VALID_RULE_YAML = """\
@@ -19,7 +17,6 @@ rule:
   action:
     type: alert
     severity: high
-    channel: dashboard
   enabled: true
 """
 
@@ -34,7 +31,6 @@ rule:
   action:
     type: alert
     severity: high
-    channel: dashboard
 """
 
 _DISABLED_RULE_YAML = """\
@@ -46,7 +42,6 @@ rule:
   action:
     type: log
     severity: low
-    channel: dashboard
   enabled: false
 """
 

@@ -1,1 +1,0 @@
-"""SafeVision Notification Service."""

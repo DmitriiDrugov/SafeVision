@@ -4,8 +4,10 @@
 # ─── Stage 1: dependencies ────────────────────────────────────────────────
 FROM node:20-alpine AS deps
 WORKDIR /app
-COPY package.json package-lock.json .npmrc ./
-RUN npm ci
+COPY package.json .npmrc ./
+# `npm install` (vs `npm ci`) lets the image rebuild even when package-lock.json
+# is regenerated for a new dependency, which happens often in active dev.
+RUN npm install --legacy-peer-deps --no-audit --no-fund
 
 # ─── Stage 2: builder ─────────────────────────────────────────────────────
 FROM node:20-alpine AS builder

@@ -1,19 +1,20 @@
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8004'
 
-// Imported lazily to avoid circular deps and SSR issues
-function _authHeaders(): HeadersInit {
-  if (typeof window === 'undefined') return {}
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { authHeaders } = require('./auth') as typeof import('./auth')
-    return authHeaders()
-  } catch {
-    return {}
-  }
-}
 export const RULES_API_BASE =
   process.env.NEXT_PUBLIC_RULES_API_URL ?? 'http://localhost:8003'
+
+/**
+ * Read the JWT cookie directly to avoid pulling `lib/auth` (which imports back
+ * into this module). Equivalent to `authHeaders()` from `lib/auth.ts`.
+ */
+function _authHeaders(): HeadersInit {
+  if (typeof document === 'undefined') return {}
+  const match = /(?:^|; )sv_session=([^;]*)/.exec(document.cookie)
+  if (!match) return {}
+  // The cookie helper writes the token URL-encoded; mirror that here.
+  return { Authorization: `Bearer ${decodeURIComponent(match[1])}` }
+}
 
 export class ApiError extends Error {
   constructor(
@@ -28,7 +29,6 @@ export class ApiError extends Error {
 // ── Types (mirror shared/schemas Pydantic models) ──────────────────────────
 
 export type Severity = 'low' | 'medium' | 'high' | 'critical'
-export type Channel = 'whatsapp' | 'email' | 'dashboard' | 'all'
 export type IncidentStatus =
   | 'open'
   | 'acknowledged'
@@ -64,7 +64,6 @@ export interface ViolationEvent {
   camera_id: string
   zone_id: string
   severity: Severity
-  channel: Channel
   detected_at: string
   detection_payload: DetectionPayload
   trace_id: string
@@ -104,7 +103,6 @@ export interface RuleCondition {
 export interface RuleAction {
   type: string
   severity: Severity
-  channel: Channel
 }
 
 export interface Rule {
@@ -250,7 +248,7 @@ export async function updateRule(
 }
 
 export async function deleteRule(name: string): Promise<void> {
-  return apiFetch<void>(
+  return apiFetch<undefined>(
     RULES_API_BASE,
     `/api/v1/rules/${encodeURIComponent(name)}`,
     { method: 'DELETE' },
@@ -293,7 +291,7 @@ export async function updateCamera(
 }
 
 export async function deleteCamera(id: string): Promise<void> {
-  return apiFetch<void>(API_BASE, `/api/v1/cameras/${encodeURIComponent(id)}`, {
+  return apiFetch<undefined>(API_BASE, `/api/v1/cameras/${encodeURIComponent(id)}`, {
     method: 'DELETE',
   })
 }

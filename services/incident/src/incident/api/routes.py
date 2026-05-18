@@ -1,11 +1,20 @@
 """Incident Service REST + WebSocket routes."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, WebSocket, WebSocketDisconnect, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Query,
+    Request,
+    WebSocket,
+    WebSocketDisconnect,
+    status,
+)
 from prometheus_client import Counter
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
@@ -153,7 +162,7 @@ async def acknowledge_incident(
     before = row.status
     row.status = "acknowledged"
     row.acknowledged_by = body.actor
-    row.acknowledged_at = datetime.now(tz=timezone.utc)
+    row.acknowledged_at = datetime.now(tz=UTC)
     await _write_audit(db, incident_id, body.actor, "acknowledge", body.note, before, "acknowledged")
     await db.commit()
     await db.refresh(row)
@@ -173,7 +182,7 @@ async def resolve_incident(
         )
     before = row.status
     row.status = "resolved"
-    row.resolved_at = datetime.now(tz=timezone.utc)
+    row.resolved_at = datetime.now(tz=UTC)
     await _write_audit(db, incident_id, body.actor, "resolve", body.note, before, "resolved")
     await db.commit()
     await db.refresh(row)
@@ -211,7 +220,7 @@ async def get_evidence_url(
             detail="Evidence clip not available yet",
         )
     url: str = await request.app.state.storage.get_presigned_url(incident_id)
-    expires_at = (datetime.now(tz=timezone.utc) + timedelta(days=7)).isoformat()
+    expires_at = (datetime.now(tz=UTC) + timedelta(days=7)).isoformat()
     return {"url": url, "expires_at": expires_at}
 
 

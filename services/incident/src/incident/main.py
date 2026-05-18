@@ -18,27 +18,25 @@ import logging
 import os
 import socket
 import sys
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
-from typing import AsyncIterator
+from datetime import datetime
 
 import redis.asyncio as aioredis
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import Counter, start_http_server
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-
 from proto.otel import setup_otel
 from proto.violations import ViolationStreamEvent
 from schemas.event import ViolationEvent
-
-from .db.migrate import run_migrations
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from .api.auth_routes import router as auth_router
 from .api.camera_routes import router as camera_router
 from .api.routes import ConnectionManager, IncidentOut, router
 from .clip_assembler import ClipAssembler
+from .db.migrate import run_migrations
 from .db.models import IncidentModel
 from .storage import IncidentStorage
 

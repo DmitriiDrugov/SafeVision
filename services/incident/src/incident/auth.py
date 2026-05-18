@@ -11,7 +11,7 @@ Tokens expire after JWT_EXPIRE_HOURS hours (default 24).
 from __future__ import annotations
 
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 import bcrypt
@@ -72,8 +72,8 @@ def create_token(user: UserInfo) -> str:
     payload = {
         "sub": user.username,
         "role": user.role,
-        "exp": datetime.now(tz=timezone.utc) + timedelta(hours=_TOKEN_EXPIRE_HOURS),
-        "iat": datetime.now(tz=timezone.utc),
+        "exp": datetime.now(tz=UTC) + timedelta(hours=_TOKEN_EXPIRE_HOURS),
+        "iat": datetime.now(tz=UTC),
     }
     return jwt.encode(payload, _SECRET_KEY, algorithm=_ALGORITHM)
 

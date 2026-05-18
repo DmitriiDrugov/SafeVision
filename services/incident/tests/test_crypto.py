@@ -1,8 +1,6 @@
 """Unit tests for RTSP URL encryption."""
 from __future__ import annotations
 
-import os
-
 import pytest
 
 

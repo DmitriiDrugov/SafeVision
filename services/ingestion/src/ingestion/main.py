@@ -22,7 +22,6 @@ import sys
 import redis.asyncio as aioredis
 import structlog
 from prometheus_client import start_http_server
-
 from proto.otel import setup_otel
 from schemas.camera import Camera
 
@@ -158,7 +157,7 @@ async def _reconcile_loop(
 
         try:
             await asyncio.wait_for(shutdown_event.wait(), timeout=_CAMERA_POLL_INTERVAL)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             pass  # normal — keep polling
 
 

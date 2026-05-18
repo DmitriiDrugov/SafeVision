@@ -119,18 +119,6 @@ for i in $(seq 1 30); do
     sleep 2
 done
 
-# ── n8n database ──────────────────────────────────────────────────────────────
-POSTGRES_USER=$(grep '^POSTGRES_USER=' "$ENV_FILE" | cut -d= -f2)
-if docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" \
-       exec -T postgres psql -U "$POSTGRES_USER" -lqt | cut -d\| -f1 | grep -qw n8n; then
-    ok "n8n database already exists — skipping"
-else
-    info "Creating n8n database..."
-    docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" \
-        exec -T postgres createdb -U "$POSTGRES_USER" n8n
-    ok "n8n database created"
-fi
-
 # ── start all services ────────────────────────────────────────────────────────
 info "Starting all services (this may take a minute on first boot)..."
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d
@@ -180,7 +168,6 @@ echo ""
 echo "  Config UI      →  http://localhost:3000"
 echo "  Login           →  $FIRST_USER / $FIRST_PASS"
 echo "  Grafana         →  http://localhost:3001  (admin / see .env)"
-echo "  n8n             →  http://localhost:5678"
 echo "  MinIO console   →  http://localhost:9001"
 echo "  Prometheus      →  http://localhost:9090"
 echo ""

@@ -14,13 +14,12 @@ infra/k8s/safevision/
   values.prod.yaml        # production overrides (external datastores, GPU, TLS, multi-replica)
   templates/
     _helpers.tpl          # name/label/image/URL helper templates
-    secret.yaml           # JWT secret, auth users, DB + MinIO + webhook credentials
+    secret.yaml           # JWT secret, auth users, DB + MinIO credentials
     pvc.yaml              # frame-archive, models, rules PersistentVolumeClaims
     ingestion-deployment.yaml
     inference-deployment.yaml    # nodeSelector + tolerations when gpu.enabled: true
     rule-engine-deployment.yaml
     incident-deployment.yaml
-    notification-deployment.yaml
     web-deployment.yaml
     postgres-statefulset.yaml    # conditional on postgres.internal: true
     redis-statefulset.yaml       # conditional on redis.internal: true

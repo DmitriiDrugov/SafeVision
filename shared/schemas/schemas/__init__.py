@@ -4,7 +4,6 @@ from schemas.event import ViolationEvent
 from schemas.incident import Incident, IncidentStatus
 from schemas.rule import (
     ActionType,
-    Channel,
     ObjectType,
     PPEType,
     Rule,
@@ -24,7 +23,6 @@ __all__ = [
     "Incident",
     "IncidentStatus",
     "ActionType",
-    "Channel",
     "ObjectType",
     "PPEType",
     "Rule",

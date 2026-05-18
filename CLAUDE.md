@@ -3,8 +3,8 @@
 ## Repository Layout
 
 ```
-services/          # Five Python microservices (ingestion, inference, rule-engine, incident, notification)
-web/app/           # Next.js 14 configuration UI
+services/          # Four Python microservices (ingestion, inference, rule-engine, incident)
+web/app/           # Next.js 15 configuration UI + browser-side demo mode
 shared/            # Pydantic schemas and Redis Stream proto models (imported by all Python services)
 infra/             # docker-compose stack, Helm chart, Grafana dashboards, Prometheus rules
 tests/             # unit, integration, e2e, load, llm-eval test suites
@@ -20,7 +20,7 @@ Always push to this branch. Never push directly to `main`.
 ## Running the Stack
 
 ```bash
-# Infrastructure only (Postgres, Redis, MinIO, n8n, Prometheus, Grafana, Loki)
+# Full local stack (Postgres, Redis, MinIO, Prometheus, Grafana, Loki + Python services + web)
 docker compose -f infra/docker-compose/docker-compose.yml --env-file infra/docker-compose/.env up -d
 ```
 

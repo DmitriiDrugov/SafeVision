@@ -33,7 +33,6 @@ rule:
   action:
     type: alert | log
     severity: low | medium | high | critical
-    channel: dashboard | whatsapp | email | all
   enabled: true
 ```
 

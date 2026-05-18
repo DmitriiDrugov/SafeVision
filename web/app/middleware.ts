@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
-const PUBLIC_PATHS = ['/login', '/api/']
+const PUBLIC_PATHS = ['/login', '/api/', '/publish/']
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl

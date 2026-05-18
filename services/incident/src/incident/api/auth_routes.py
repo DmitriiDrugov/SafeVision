@@ -4,8 +4,8 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
-from incident.auth import CurrentUser, UserInfo, authenticate_user, create_token
 from incident import ratelimit
+from incident.auth import CurrentUser, UserInfo, authenticate_user, create_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

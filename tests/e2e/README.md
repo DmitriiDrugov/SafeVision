@@ -19,4 +19,5 @@ make e2e-fixtures
   resulting Incident table contains exactly the 12 expected violations
   (annotation manifest stored alongside the clip).
 - `test_p95_latency_under_5s`: measure timestamp delta between violation
-  detected_at and notification webhook delivered. Assert p95 < 5s.
+  detected_at and incident appearing in the Incident Service REST API.
+  Assert p95 < 5s.

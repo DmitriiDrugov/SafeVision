@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import numpy as np
 import structlog
-
 from schemas.detection import TrackedObject
 
 logger = structlog.get_logger(__name__)

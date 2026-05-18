@@ -5,13 +5,12 @@ from __future__ import annotations
 import asyncio
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import av
 import numpy as np
 import structlog
 from prometheus_client import Counter, Gauge
-
 from schemas.camera import Camera
 
 from .frame_publisher import FramePublisher
@@ -114,7 +113,7 @@ class StreamReader:
 
                         rgb = frame.to_ndarray(format="rgb24")
                         _frames_decoded.labels(camera_id=self._camera.id).inc()
-                        ts = datetime.now(tz=timezone.utc)
+                        ts = datetime.now(tz=UTC)
 
                         fut = asyncio.run_coroutine_threadsafe(
                             frame_queue.put((rgb, ts)), loop

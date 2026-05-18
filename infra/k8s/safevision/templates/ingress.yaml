@@ -65,13 +65,4 @@ spec:
                 name: {{ include "safevision.fullname" . }}-rule-engine
                 port:
                   name: http
-
-          # Notification WebSocket (incident live feed)
-          - path: /ws
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ include "safevision.fullname" . }}-notification
-                port:
-                  name: http
 {{- end }}
