@@ -56,18 +56,27 @@ Open `http://localhost:3000/login`, click **Try the demo**, then:
 
 ### Deploy to Vercel
 
-The repo's `vercel.json` already configures the build:
+Vercel must see this as a **single Next.js app** rooted at `web/app/`, not as a
+monorepo of Python services (the `services/*` and `shared/` trees are
+production-stack only and cannot run on Vercel).
+
+**Vercel UI (recommended):**
+
+1. New Project → Import the repo.
+2. **Root Directory: `web/app`** (click "Edit" next to the directory field).
+3. Framework Preset auto-detects **Next.js**.
+4. Click **Deploy**. `web/app/vercel.json` provides the demo-mode env vars.
+
+**CLI:**
 
 ```bash
-# Option 1 — CLI
+cd web/app
 npx vercel --prod
-
-# Option 2 — Git integration
-# Connect the repo in Vercel UI. Root directory: leave as repo root.
-# The default build will pick up vercel.json.
 ```
 
-`NEXT_PUBLIC_DEMO_MODE=true` is baked into `vercel.json`, so cloud builds default to demo mode automatically. To enable the LLM rule builder, set `OPENROUTER_API_KEY` in Vercel project settings.
+To enable the LLM rule builder, set `OPENROUTER_API_KEY` in Vercel project
+settings. `NEXT_PUBLIC_DEMO_MODE=true` is baked into `web/app/vercel.json`, so
+cloud builds default to demo mode automatically.
 
 ## Full-stack architecture (Docker Compose path)
 
