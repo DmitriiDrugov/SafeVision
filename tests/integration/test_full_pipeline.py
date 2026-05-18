@@ -72,7 +72,6 @@ rule:
   action:
     type: alert
     severity: high
-    channel: whatsapp
   enabled: true
 """
 
@@ -85,7 +84,6 @@ rule:
   action:
     type: alert
     severity: medium
-    channel: dashboard
   enabled: true
 """
 
@@ -99,7 +97,6 @@ rule:
   action:
     type: alert
     severity: high
-    channel: dashboard
   enabled: false
 """
 

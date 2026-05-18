@@ -1,3 +1,87 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: #06080d;
+  color: #d9dde6;
+}
+
+body {
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle scanline grid background used by control-room layouts. */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Thin scrollbars for dark surfaces. */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* Severity tint helpers used in feeds and chips. */
+.tint-critical {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+.tint-high {
+  background-color: rgba(249, 115, 22, 0.12);
+  color: #fdba74;
+  border-color: rgba(249, 115, 22, 0.35);
+}
+.tint-medium {
+  background-color: rgba(250, 204, 21, 0.12);
+  color: #fde68a;
+  border-color: rgba(250, 204, 21, 0.35);
+}
+.tint-low {
+  background-color: rgba(59, 130, 246, 0.12);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+/* Reusable surface tokens. */
+.surface {
+  background-color: #10141d;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.surface-raised {
+  background-color: #161b26;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.surface-input {
+  background-color: #0b0f17;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #d9dde6;
+}
+.surface-input:focus {
+  outline: none;
+  border-color: rgba(0, 212, 255, 0.6);
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.12);
+}

@@ -39,7 +39,7 @@ def setup_otel(service_name: str) -> None:
         logger.warning("otel.setup_failed", error=str(exc))
 
 
-def get_tracer() -> "trace.Tracer":  # type: ignore[name-defined]
+def get_tracer() -> trace.Tracer:  # type: ignore[name-defined]
     from opentelemetry import trace
 
     return trace.get_tracer(_TRACER_NAME)

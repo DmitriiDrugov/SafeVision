@@ -24,7 +24,6 @@ sys.path.insert(0, str(_SHARED / "schemas"))
 sys.path.insert(0, str(_SHARED / "proto"))
 sys.path.insert(0, str(_ROOT / "services" / "rule-engine" / "src"))
 sys.path.insert(0, str(_ROOT / "services" / "incident" / "src"))
-sys.path.insert(0, str(_ROOT / "services" / "notification" / "src"))
 
 _REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379")
 

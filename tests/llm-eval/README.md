@@ -10,7 +10,6 @@ descriptions into valid YAML rules.
 - All PPE types: helmet, vest, gloves, mask
 - All actions: entering, exiting, standing, moving
 - All severities: low, medium, high, critical
-- All channels: whatsapp, email, dashboard, all
 - All object types: person, forklift, vehicle
 - Duration-only, min_count-only, and combined constraints
 - PPE + action combinations
@@ -38,7 +37,7 @@ python tests/llm-eval/run.py --threshold 0.9
 Nightly workflow (`.github/workflows/llm-eval.yml`) runs the full eval at 03:00 UTC.
 Fails if accuracy < 85%. Accuracy is defined as: the LLM-produced YAML is valid
 against the Pydantic Rule schema AND semantically equivalent to expected_yaml
-(zone, condition.*, action.type/severity/channel must match; rule name is ignored).
+(zone, condition.*, action.type/severity must match; rule name is ignored).
 
 ## Adding Cases
 

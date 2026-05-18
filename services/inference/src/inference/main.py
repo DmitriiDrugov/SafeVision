@@ -12,17 +12,16 @@ import os
 import signal
 import socket
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from multiprocessing.shared_memory import SharedMemory
 
 import numpy as np
 import redis.asyncio as aioredis
 import structlog
 from prometheus_client import Counter, Gauge, start_http_server
-
 from proto.detections import DetectionStreamEvent
-from proto.otel import setup_otel
 from proto.frames import FrameEvent
+from proto.otel import setup_otel
 from schemas.detection import DetectionPayload
 
 from .detector import Detector
@@ -76,7 +75,7 @@ def _read_frame_from_shm(event: FrameEvent) -> np.ndarray:
 
 
 def _print_detections(event: FrameEvent, payload: DetectionPayload) -> None:
-    ts = datetime.now(tz=timezone.utc).isoformat()
+    ts = datetime.now(tz=UTC).isoformat()
     if not payload.objects:
         print(f"[{ts}] cam={event.camera_id} frame={event.frame_id} — no detections")
         return

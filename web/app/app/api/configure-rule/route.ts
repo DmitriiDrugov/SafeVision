@@ -1,9 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 const MODEL = 'meta-llama/llama-3.1-8b-instruct'
 
 const SYSTEM_PROMPT = `You are SafeVision Rule Assistant. Your job is to convert natural language safety rule descriptions into valid SafeVision YAML.
+
+Matched rules surface as incidents in the SafeVision web UI — there is no
+WhatsApp, email, or webhook channel; operators triage everything from the
+dashboard.
 
 The YAML schema is:
 rule:
@@ -19,11 +24,11 @@ rule:
   action:
     type: alert | log | block
     severity: low | medium | high | critical
-    channel: whatsapp | email | dashboard | all
 
 Rules:
 - Always respond with a brief explanation followed by the YAML block fenced with \`\`\`yaml ... \`\`\`
 - The YAML must be complete and valid
+- Do NOT include a "channel" field — incidents are observed only in the web UI
 - If you cannot produce a rule from the description, explain why and ask for clarification
 - name must be lowercase snake_case
 
@@ -41,7 +46,6 @@ rule:
   action:
     type: alert
     severity: high
-    channel: whatsapp
 \`\`\``
 
 interface ChatMessage {

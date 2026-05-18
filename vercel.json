@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "buildCommand": "cd web/app && npm install --legacy-peer-deps --no-audit --no-fund && npm run build",
+  "installCommand": "echo 'install handled in buildCommand'",
+  "outputDirectory": "web/app/.next",
+  "env": {
+    "NEXT_PUBLIC_DEMO_MODE": "true",
+    "NEXT_PUBLIC_APP_NAME": "SafeVision",
+    "NEXT_PUBLIC_PEER_HOST": "0.peerjs.com",
+    "NEXT_PUBLIC_PEER_PORT": "443",
+    "NEXT_PUBLIC_PEER_SECURE": "true"
+  }
+}

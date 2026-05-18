@@ -1,6 +1,6 @@
 # Rule: alert when any person is detected anywhere in the scene.
 # This fires immediately with any camera — good for verifying the full
-# ingestion → inference → rule-engine → incident → notification pipeline.
+# ingestion → inference → rule-engine → incident pipeline.
 rule:
   name: person_detected
   zone: site
@@ -9,5 +9,4 @@ rule:
   action:
     type: alert
     severity: low
-    channel: dashboard
   enabled: true

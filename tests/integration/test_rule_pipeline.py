@@ -41,7 +41,6 @@ rule:
   action:
     type: alert
     severity: high
-    channel: whatsapp
   enabled: true
 """
 

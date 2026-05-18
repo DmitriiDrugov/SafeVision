@@ -41,15 +41,6 @@ groups:
           summary: "Incident service is down"
           description: "No incident instance has been up for more than 2 minutes."
 
-      - alert: SafeVisionNotificationDown
-        expr: absent(up{job="notification"} == 1)
-        for: 2m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Notification service is down"
-          description: "No notification instance has been up for more than 2 minutes."
-
       # ── Stream health ────────────────────────────────────────────────────
 
       - alert: SafeVisionNoFramesIngested
@@ -104,22 +95,3 @@ groups:
           summary: "Critical violations spiking"
           description: "More than 10 critical violations per minute — immediate attention required."
 
-      # ── Notification DLQ ────────────────────────────────────────────────
-
-      - alert: SafeVisionDLQHigh
-        expr: notification_dlq_depth > 10
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "Notification DLQ has {{ $value }} events"
-          description: "The notification dead-letter queue depth has exceeded 10 for 5 minutes — check n8n webhook connectivity."
-
-      - alert: SafeVisionDLQCritical
-        expr: notification_dlq_depth > 100
-        for: 2m
-        labels:
-          severity: critical
-        annotations:
-          summary: "Notification DLQ critically deep ({{ $value }} events)"
-          description: "More than 100 events are stuck in the dead-letter queue."

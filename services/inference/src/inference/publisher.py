@@ -8,7 +8,6 @@ from multiprocessing.shared_memory import SharedMemory
 import redis.asyncio as aioredis
 import structlog
 from prometheus_client import Counter, Histogram
-
 from proto.detections import DetectionStreamEvent
 
 logger = structlog.get_logger(__name__)

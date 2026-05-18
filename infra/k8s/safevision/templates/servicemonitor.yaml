@@ -89,26 +89,4 @@ spec:
       interval: {{ .Values.monitoring.serviceMonitor.interval }}
       scrapeTimeout: {{ .Values.monitoring.serviceMonitor.scrapeTimeout }}
       path: /metrics
-
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: {{ include "safevision.fullname" . }}-notification
-  namespace: {{ .Values.monitoring.serviceMonitor.namespace }}
-  labels:
-    {{- include "safevision.labels" . | nindent 4 }}
-spec:
-  selector:
-    matchLabels:
-      {{- include "safevision.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: notification
-  namespaceSelector:
-    matchNames:
-      - {{ .Release.Namespace }}
-  endpoints:
-    - port: metrics
-      interval: {{ .Values.monitoring.serviceMonitor.interval }}
-      scrapeTimeout: {{ .Values.monitoring.serviceMonitor.scrapeTimeout }}
-      path: /metrics
 {{- end }}

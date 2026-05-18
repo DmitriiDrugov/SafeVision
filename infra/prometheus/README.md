@@ -22,14 +22,6 @@ groups:
         for: 5m
         labels:
           severity: medium
-
-      - alert: NotificationFailureRate
-        expr: |
-          (sum(rate(notifications_failed_total[5m]))
-           / sum(rate(notifications_sent_total[5m]))) > 0.05
-        for: 5m
-        labels:
-          severity: medium
 ```
 
 To activate, uncomment `rule_files:` in `infra/docker-compose/prometheus.yml`

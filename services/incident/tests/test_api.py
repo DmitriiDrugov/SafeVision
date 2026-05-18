@@ -1,16 +1,14 @@
 """Tests for the Incident Service REST API."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from incident.db.models import IncidentModel
-
 
 # ── helpers ───────────────────────────────────────────────────────────────
 
@@ -22,7 +20,7 @@ def _make_incident(**kwargs) -> IncidentModel:
         severity="high",
         status="open",
         detection_payload={},
-        detected_at=datetime.now(tz=timezone.utc),
+        detected_at=datetime.now(tz=UTC),
     )
     defaults.update(kwargs)
     return IncidentModel(**defaults)

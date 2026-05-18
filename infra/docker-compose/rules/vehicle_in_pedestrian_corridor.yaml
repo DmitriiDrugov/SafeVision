@@ -6,5 +6,4 @@ rule:
   action:
     type: alert
     severity: critical
-    channel: all
   enabled: true

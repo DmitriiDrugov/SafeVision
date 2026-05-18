@@ -5,7 +5,7 @@ select = ["E", "F", "I", "N", "W", "UP"]
 ignore = []
 
 [tool.ruff.isort]
-known-first-party = ["shared", "ingestion", "inference", "rule_engine", "incident", "notification"]
+known-first-party = ["shared", "ingestion", "inference", "rule_engine", "incident"]
 
 [tool.mypy]
 python_version = "3.11"

@@ -36,7 +36,6 @@ rule:
   action:
     type: alert
     severity: high
-    channel: all
   enabled: true
 ```
 

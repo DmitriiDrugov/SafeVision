@@ -7,13 +7,12 @@ from typing import Any
 import redis.asyncio as aioredis
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-
-from incident.auth import get_current_user
-from incident.crypto import decrypt_url, encrypt_url
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from incident.auth import get_current_user
+from incident.crypto import decrypt_url, encrypt_url
 from incident.db.models import CameraModel
 
 logger = structlog.get_logger(__name__)

@@ -1,6 +1,6 @@
 {
   "name": "safevision-web",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -15,13 +15,25 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.11.17",
+    "idb-keyval": "^6.2.1",
+    "js-yaml": "^4.1.0",
+    "lucide-react": "^0.460.0",
+    "nanoid": "^5.0.7",
     "next": "^15.5.18",
+    "onnxruntime-web": "^1.20.0",
+    "peerjs": "^1.5.4",
+    "qrcode": "^1.5.4",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "zustand": "^5.0.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.44.0",
+    "@playwright/test": "1.49.1",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.12.7",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^7.7.0",

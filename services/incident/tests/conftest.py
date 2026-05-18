@@ -6,14 +6,13 @@ dependencies (Redis, MinIO) so tests run without Docker.
 from __future__ import annotations
 
 import sys
+from collections.abc import AsyncIterator
 from pathlib import Path
-from typing import AsyncIterator
 from unittest.mock import AsyncMock, MagicMock
 
-import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 # Path setup
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -22,8 +21,14 @@ sys.path.insert(0, str(_shared / "schemas"))
 sys.path.insert(0, str(_shared / "proto"))
 
 from incident.api.routes import ConnectionManager
+from incident.auth import UserInfo, get_current_user
 from incident.db.models import Base
 from incident.main import app
+
+# Tests run with auth disabled — override the FastAPI dependency to return a
+# fixed test principal. Production routes still enforce auth in app/incident.
+_TEST_USER = UserInfo(username="test-operator", role="operator")
+app.dependency_overrides[get_current_user] = lambda: _TEST_USER
 
 
 @pytest_asyncio.fixture()

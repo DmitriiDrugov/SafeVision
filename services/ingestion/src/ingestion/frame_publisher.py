@@ -12,7 +12,6 @@ import numpy as np
 import redis.asyncio as aioredis
 import structlog
 from prometheus_client import Gauge, Histogram
-
 from proto.frames import FrameEvent
 
 logger = structlog.get_logger(__name__)

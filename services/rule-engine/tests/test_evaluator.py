@@ -1,19 +1,13 @@
 """Unit tests for RuleEvaluator — the most critical test suite in the codebase."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Any
+from datetime import UTC, datetime, timedelta
 
 import pytest
-
 from proto.detections import DetectionStreamEvent
-from rule_engine.evaluator import RuleEvaluator
-from rule_engine.state import RuleState
 from schemas.detection import BoundingBox, DetectionPayload, TrackedObject
-from schemas.event import ViolationEvent
 from schemas.rule import (
     ActionType,
-    Channel,
     ObjectType,
     PPEType,
     Rule,
@@ -23,7 +17,10 @@ from schemas.rule import (
     Severity,
 )
 
-_NOW = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+from rule_engine.evaluator import RuleEvaluator
+from rule_engine.state import RuleState
+
+_NOW = datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC)
 _CAMERA = "cam01"
 _ZONE = "forklift_zone"
 
@@ -87,7 +84,6 @@ def _rule(
         action=RuleAction(
             type=RuleActionKind.alert,
             severity=severity,
-            channel=Channel.dashboard,
         ),
         enabled=enabled,
     )

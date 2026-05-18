@@ -1,23 +1,25 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
-  acknowledgeIncident,
-  getAuditLog,
-  getEvidenceUrl,
-  getIncidents,
-  markFalsePositive,
-  resolveIncident,
-  type AuditLogEntry,
-  type Incident,
-  type IncidentListParams,
-  type IncidentStatus,
-  type Severity,
-} from '@/lib/api'
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  ImageOff,
+  Trash2,
+  X,
+} from 'lucide-react'
+import cn from 'clsx'
 import { SeverityBadge } from '@/components/SeverityBadge'
 import { StatusBadge } from '@/components/StatusBadge'
+import {
+  useIncidentsStore,
+  type DemoIncident,
+} from '@/lib/stores/incidents'
+import type { IncidentStatus, Severity } from '@/lib/api'
 
-const PAGE_SIZE = 50
+const PAGE_SIZE = 25
 
 const SEVERITIES: Array<{ value: Severity | ''; label: string }> = [
   { value: '', label: 'All severities' },
@@ -32,76 +34,91 @@ const STATUSES: Array<{ value: IncidentStatus | ''; label: string }> = [
   { value: 'open', label: 'Open' },
   { value: 'acknowledged', label: 'Acknowledged' },
   { value: 'resolved', label: 'Resolved' },
-  { value: 'false_positive', label: 'False Positive' },
+  { value: 'false_positive', label: 'False positive' },
 ]
 
-export default function IncidentsPage() {
-  const [incidents, setIncidents] = useState<Incident[]>([])
-  const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState(0)
+export default function IncidentsPage(): React.ReactElement {
+  const incidents = useIncidentsStore((s) => s.incidents)
+  const setStatus = useIncidentsStore((s) => s.setStatus)
+  const remove = useIncidentsStore((s) => s.remove)
+  const loadThumbnail = useIncidentsStore((s) => s.loadThumbnail)
+  const clear = useIncidentsStore((s) => s.clear)
+
   const [filterSeverity, setFilterSeverity] = useState<Severity | ''>('')
   const [filterStatus, setFilterStatus] = useState<IncidentStatus | ''>('')
   const [filterCamera, setFilterCamera] = useState('')
-  const [selected, setSelected] = useState<Incident | null>(null)
-  const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([])
-  const [evidenceUrl, setEvidenceUrl] = useState<string | null>(null)
-  const [actorName, setActorName] = useState('operator')
-
-  const loadIncidents = useCallback(async () => {
-    setLoading(true)
-    try {
-      const params: IncidentListParams = {
-        limit: PAGE_SIZE,
-        offset: page * PAGE_SIZE,
-      }
-      if (filterSeverity) params.severity = filterSeverity
-      if (filterStatus) params.status = filterStatus
-      if (filterCamera) params.camera_id = filterCamera
-      setIncidents(await getIncidents(params))
-    } finally {
-      setLoading(false)
-    }
-  }, [page, filterSeverity, filterStatus, filterCamera])
+  const [page, setPage] = useState(0)
+  const [selected, setSelected] = useState<DemoIncident | null>(null)
+  const [thumbUrl, setThumbUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    void loadIncidents()
-  }, [loadIncidents])
+    setPage(0)
+  }, [filterSeverity, filterStatus, filterCamera])
 
-  const openDetail = async (inc: Incident) => {
-    setSelected(inc)
-    setEvidenceUrl(null)
-    setAuditLog([])
-    const [log, ev] = await Promise.allSettled([
-      getAuditLog(inc.id),
-      inc.clip_url ? getEvidenceUrl(inc.id) : Promise.resolve(null),
-    ])
-    if (log.status === 'fulfilled') setAuditLog(log.value)
-    if (ev.status === 'fulfilled' && ev.value) setEvidenceUrl(ev.value.url)
-  }
+  useEffect(() => {
+    setThumbUrl(null)
+    if (!selected) return
+    let revoke: string | null = null
+    void loadThumbnail(selected.id).then((url) => {
+      if (url) {
+        revoke = url
+        setThumbUrl(url)
+      }
+    })
+    return (): void => {
+      if (revoke) URL.revokeObjectURL(revoke)
+    }
+  }, [selected, loadThumbnail])
 
-  const act = async (
-    fn: () => Promise<Incident>,
-  ) => {
-    const updated = await fn()
-    setIncidents((prev) =>
-      prev.map((i) => (i.id === updated.id ? updated : i)),
-    )
-    setSelected(updated)
-  }
+  const filtered = useMemo(() => {
+    return incidents.filter((i) => {
+      if (filterSeverity && i.severity !== filterSeverity) return false
+      if (filterStatus && i.status !== filterStatus) return false
+      if (
+        filterCamera &&
+        !`${i.camera_id} ${i.cameraName}`
+          .toLowerCase()
+          .includes(filterCamera.toLowerCase())
+      )
+        return false
+      return true
+    })
+  }, [incidents, filterSeverity, filterStatus, filterCamera])
+
+  const pageRows = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-slate-800">Incidents</h1>
+    <div className="space-y-4">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold text-white">Incidents</h1>
+          <p className="mt-0.5 text-sm text-ink-400">
+            {filtered.length} of {incidents.length} matches. Detection events
+            are stored locally in your browser.
+          </p>
+        </div>
+        {incidents.length > 0 && (
+          <button
+            onClick={() => {
+              if (confirm('Delete all incidents from this browser?'))
+                void clear()
+            }}
+            className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-2.5 py-1.5 text-xs text-ink-300 hover:bg-white/5 hover:text-white"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Clear all
+          </button>
+        )}
+      </header>
 
       {/* Filter bar */}
-      <div className="mt-4 flex flex-wrap gap-3">
+      <div className="surface flex flex-wrap items-center gap-3 rounded-lg p-3">
+        <Filter className="h-3.5 w-3.5 text-ink-500" />
         <select
           value={filterSeverity}
-          onChange={(e) => {
-            setFilterSeverity(e.target.value as Severity | '')
-            setPage(0)
-          }}
-          className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm"
+          onChange={(e) => { setFilterSeverity(e.target.value as Severity | ''); }}
+          className="surface-input rounded-md px-2 py-1 text-xs"
         >
           {SEVERITIES.map((s) => (
             <option key={s.value} value={s.value}>
@@ -111,11 +128,10 @@ export default function IncidentsPage() {
         </select>
         <select
           value={filterStatus}
-          onChange={(e) => {
-            setFilterStatus(e.target.value as IncidentStatus | '')
-            setPage(0)
-          }}
-          className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm"
+          onChange={(e) =>
+            { setFilterStatus(e.target.value as IncidentStatus | ''); }
+          }
+          className="surface-input rounded-md px-2 py-1 text-xs"
         >
           {STATUSES.map((s) => (
             <option key={s.value} value={s.value}>
@@ -125,108 +141,66 @@ export default function IncidentsPage() {
         </select>
         <input
           type="text"
-          placeholder="Camera ID"
+          placeholder="Camera name or ID"
           value={filterCamera}
-          onChange={(e) => {
-            setFilterCamera(e.target.value)
-            setPage(0)
-          }}
-          className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm"
+          onChange={(e) => { setFilterCamera(e.target.value); }}
+          className="surface-input rounded-md px-2 py-1 text-xs"
         />
-        <button
-          onClick={() => void loadIncidents()}
-          className="rounded bg-slate-700 px-3 py-1.5 text-sm text-white hover:bg-slate-800"
-        >
-          Refresh
-        </button>
       </div>
 
       {/* Table */}
-      <div className="mt-4 overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <div className="surface overflow-x-auto rounded-lg">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-            <tr>
-              <th className="px-4 py-3 text-left">Rule</th>
-              <th className="px-4 py-3 text-left">Camera</th>
-              <th className="px-4 py-3 text-left">Zone</th>
-              <th className="px-4 py-3 text-left">Severity</th>
-              <th className="px-4 py-3 text-left">Status</th>
-              <th className="px-4 py-3 text-left">Detected</th>
-              <th className="px-4 py-3 text-left">Actions</th>
+          <thead>
+            <tr className="border-b border-white/5 text-left text-[10px] uppercase tracking-widest text-ink-500">
+              <th className="px-3 py-2.5">Rule</th>
+              <th className="px-3 py-2.5">Camera</th>
+              <th className="px-3 py-2.5">Zone</th>
+              <th className="px-3 py-2.5">Severity</th>
+              <th className="px-3 py-2.5">Status</th>
+              <th className="px-3 py-2.5">Detected</th>
+              <th className="px-3 py-2.5" />
             </tr>
           </thead>
           <tbody>
-            {loading ? (
+            {pageRows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
-                  Loading…
-                </td>
-              </tr>
-            ) : incidents.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
-                  No incidents found.
+                <td
+                  colSpan={7}
+                  className="px-3 py-10 text-center text-sm text-ink-400"
+                >
+                  No incidents matching filters.
                 </td>
               </tr>
             ) : (
-              incidents.map((inc) => (
+              pageRows.map((inc) => (
                 <tr
                   key={inc.id}
-                  className="border-t border-slate-100 hover:bg-slate-50"
+                  className="border-t border-white/5 transition-colors hover:bg-white/5"
                 >
-                  <td className="px-4 py-2 font-medium">{inc.rule_id}</td>
-                  <td className="px-4 py-2 text-slate-600">{inc.camera_id}</td>
-                  <td className="px-4 py-2 text-slate-500">{inc.zone_id}</td>
-                  <td className="px-4 py-2">
+                  <td className="px-3 py-2 font-medium text-white">
+                    {inc.ruleName}
+                  </td>
+                  <td className="px-3 py-2 text-ink-300">{inc.cameraName}</td>
+                  <td className="px-3 py-2 text-ink-400 font-mono text-xs">
+                    {inc.zone_id || '—'}
+                  </td>
+                  <td className="px-3 py-2">
                     <SeverityBadge severity={inc.severity} />
                   </td>
-                  <td className="px-4 py-2">
+                  <td className="px-3 py-2">
                     <StatusBadge status={inc.status} />
                   </td>
-                  <td className="px-4 py-2 text-slate-400">
+                  <td className="px-3 py-2 font-mono text-xs text-ink-400">
                     {new Date(inc.detected_at).toLocaleString()}
                   </td>
-                  <td className="px-4 py-2">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => void openDetail(inc)}
-                        className="text-xs text-blue-600 hover:underline"
-                      >
-                        Detail
-                      </button>
-                      {inc.status === 'open' && (
-                        <>
-                          <button
-                            onClick={() =>
-                              void act(() =>
-                                acknowledgeIncident(inc.id, actorName),
-                              )
-                            }
-                            className="text-xs text-yellow-600 hover:underline"
-                          >
-                            Ack
-                          </button>
-                          <button
-                            onClick={() =>
-                              void act(() => markFalsePositive(inc.id))
-                            }
-                            className="text-xs text-slate-500 hover:underline"
-                          >
-                            FP
-                          </button>
-                        </>
-                      )}
-                      {inc.status === 'acknowledged' && (
-                        <button
-                          onClick={() =>
-                            void act(() => resolveIncident(inc.id, actorName))
-                          }
-                          className="text-xs text-green-600 hover:underline"
-                        >
-                          Resolve
-                        </button>
-                      )}
-                    </div>
+                  <td className="px-3 py-2 text-right">
+                    <button
+                      onClick={() => { setSelected(inc); }}
+                      className="text-xs text-accent hover:underline"
+                    >
+                      Detail
+                    </button>
                   </td>
                 </tr>
               ))
@@ -236,151 +210,205 @@ export default function IncidentsPage() {
       </div>
 
       {/* Pagination */}
-      <div className="mt-4 flex items-center gap-4">
-        <button
-          disabled={page === 0}
-          onClick={() => setPage((p) => p - 1)}
-          className="rounded border border-slate-300 px-3 py-1 text-sm disabled:opacity-40"
-        >
-          Previous
-        </button>
-        <span className="text-sm text-slate-600">Page {page + 1}</span>
-        <button
-          disabled={incidents.length < PAGE_SIZE}
-          onClick={() => setPage((p) => p + 1)}
-          className="rounded border border-slate-300 px-3 py-1 text-sm disabled:opacity-40"
-        >
-          Next
-        </button>
+      <div className="flex items-center justify-between text-xs text-ink-400">
+        <div>
+          Page {page + 1} of {totalPages}
+        </div>
+        <div className="flex gap-1">
+          <button
+            disabled={page === 0}
+            onClick={() => { setPage((p) => p - 1); }}
+            className={cn(
+              'inline-flex items-center gap-1 rounded-md border border-white/10 px-2 py-1',
+              page === 0
+                ? 'opacity-40'
+                : 'hover:bg-white/5 hover:text-white',
+            )}
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+            Previous
+          </button>
+          <button
+            disabled={page >= totalPages - 1}
+            onClick={() => { setPage((p) => p + 1); }}
+            className={cn(
+              'inline-flex items-center gap-1 rounded-md border border-white/10 px-2 py-1',
+              page >= totalPages - 1
+                ? 'opacity-40'
+                : 'hover:bg-white/5 hover:text-white',
+            )}
+          >
+            Next
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
 
       {/* Detail drawer */}
-      {selected !== null && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          <div
-            className="flex-1 bg-black/40"
-            onClick={() => setSelected(null)}
-          />
-          <div className="flex w-full max-w-lg flex-col bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b px-6 py-4">
-              <h2 className="text-lg font-semibold">Incident Detail</h2>
-              <button
-                onClick={() => setSelected(null)}
-                className="text-slate-400 hover:text-slate-700"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-xs text-slate-500">Rule</p>
-                  <p className="font-medium">{selected.rule_id}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500">Camera / Zone</p>
-                  <p className="font-medium">
-                    {selected.camera_id} / {selected.zone_id}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500">Severity</p>
-                  <SeverityBadge severity={selected.severity} />
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500">Status</p>
-                  <StatusBadge status={selected.status} />
-                </div>
-                <div className="col-span-2">
-                  <p className="text-xs text-slate-500">Detected At</p>
-                  <p>{new Date(selected.detected_at).toLocaleString()}</p>
-                </div>
-              </div>
-
-              {evidenceUrl && (
-                <div>
-                  <p className="mb-1 text-xs font-medium text-slate-500">
-                    Evidence Clip
-                  </p>
-                  <video
-                    src={evidenceUrl}
-                    controls
-                    className="w-full rounded border"
-                  />
-                </div>
-              )}
-
+      {selected && (
+        <div
+          className="fixed inset-0 z-50 flex justify-end"
+          onClick={() => { setSelected(null); }}
+        >
+          <div className="flex-1 bg-ink-950/70 backdrop-blur-sm" />
+          <aside
+            className="flex h-full w-full max-w-md flex-col border-l border-white/10 bg-ink-900 shadow-panel"
+            onClick={(e) => { e.stopPropagation(); }}
+          >
+            <header className="flex items-center justify-between border-b border-white/5 px-5 py-3">
               <div>
-                <p className="mb-2 text-xs font-medium text-slate-500">Actor</p>
-                <input
-                  type="text"
-                  value={actorName}
-                  onChange={(e) => setActorName(e.target.value)}
-                  className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
-                />
-              </div>
-
-              <div className="flex gap-2">
-                {selected.status === 'open' && (
-                  <>
-                    <button
-                      onClick={() =>
-                        void act(() =>
-                          acknowledgeIncident(selected.id, actorName),
-                        )
-                      }
-                      className="rounded bg-yellow-500 px-3 py-1.5 text-sm text-white hover:bg-yellow-600"
-                    >
-                      Acknowledge
-                    </button>
-                    <button
-                      onClick={() =>
-                        void act(() => markFalsePositive(selected.id))
-                      }
-                      className="rounded bg-slate-200 px-3 py-1.5 text-sm hover:bg-slate-300"
-                    >
-                      False Positive
-                    </button>
-                  </>
-                )}
-                {selected.status === 'acknowledged' && (
-                  <button
-                    onClick={() =>
-                      void act(() => resolveIncident(selected.id, actorName))
-                    }
-                    className="rounded bg-green-600 px-3 py-1.5 text-sm text-white hover:bg-green-700"
-                  >
-                    Resolve
-                  </button>
-                )}
-              </div>
-
-              {auditLog.length > 0 && (
-                <div>
-                  <p className="mb-2 text-xs font-medium text-slate-500">
-                    Audit Log
-                  </p>
-                  <ul className="space-y-1">
-                    {auditLog.map((entry) => (
-                      <li
-                        key={entry.id}
-                        className="rounded bg-slate-50 px-3 py-2 text-xs"
-                      >
-                        <span className="font-medium">{entry.action}</span> by{' '}
-                        {entry.actor} —{' '}
-                        {new Date(entry.created_at).toLocaleString()}
-                        {entry.note && (
-                          <p className="mt-0.5 text-slate-500">{entry.note}</p>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
+                <div className="text-sm font-semibold text-white">
+                  {selected.ruleName}
                 </div>
-              )}
+                <div className="font-mono text-[10px] text-ink-500">
+                  {selected.id}
+                </div>
+              </div>
+              <button
+                onClick={() => { setSelected(null); }}
+                className="rounded p-1 text-ink-400 hover:bg-white/5 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </header>
+
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              <div className="aspect-video overflow-hidden rounded-md bg-black">
+                {thumbUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={thumbUrl}
+                    alt="Incident snapshot"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="grid h-full w-full place-items-center text-ink-500">
+                    <ImageOff className="h-7 w-7" />
+                  </div>
+                )}
+              </div>
+
+              <dl className="mt-4 grid grid-cols-2 gap-3 text-xs">
+                <Field label="Camera" value={selected.cameraName} />
+                <Field label="Zone" value={selected.zone_id || '—'} />
+                <Field
+                  label="Severity"
+                  value={<SeverityBadge severity={selected.severity} />}
+                />
+                <Field
+                  label="Status"
+                  value={<StatusBadge status={selected.status} />}
+                />
+                <Field
+                  label="Detected"
+                  value={new Date(selected.detected_at).toLocaleString()}
+                />
+                <Field
+                  label="Acked by"
+                  value={selected.acknowledged_by ?? '—'}
+                />
+              </dl>
+
+              <section className="mt-4">
+                <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-ink-400">
+                  Detected classes
+                </div>
+                <div className="flex flex-wrap gap-1.5 text-[11px]">
+                  {Object.entries(selected.classCounts).length === 0 && (
+                    <span className="text-ink-500">none recorded</span>
+                  )}
+                  {Object.entries(selected.classCounts).map(([cls, n]) => (
+                    <span
+                      key={cls}
+                      className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 font-mono"
+                    >
+                      {cls} × {n}
+                    </span>
+                  ))}
+                </div>
+              </section>
             </div>
-          </div>
+
+            <footer className="flex flex-wrap gap-2 border-t border-white/5 px-5 py-3">
+              {selected.status === 'open' && (
+                <>
+                  <button
+                    onClick={() => {
+                      setStatus(selected.id, 'acknowledged', 'operator')
+                      setSelected((s) =>
+                        s
+                          ? {
+                              ...s,
+                              status: 'acknowledged',
+                              acknowledged_by: 'operator',
+                              acknowledged_at: new Date().toISOString(),
+                            }
+                          : s,
+                      )
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-md bg-severity-medium/15 px-3 py-1.5 text-xs font-medium text-severity-medium hover:bg-severity-medium/25"
+                  >
+                    Acknowledge
+                  </button>
+                  <button
+                    onClick={() => {
+                      setStatus(selected.id, 'false_positive')
+                      setSelected((s) =>
+                        s ? { ...s, status: 'false_positive' } : s,
+                      )
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-white/10 px-3 py-1.5 text-xs text-ink-200 hover:bg-white/5"
+                  >
+                    False positive
+                  </button>
+                </>
+              )}
+              {selected.status === 'acknowledged' && (
+                <button
+                  onClick={() => {
+                    setStatus(selected.id, 'resolved')
+                    setSelected((s) =>
+                      s ? { ...s, status: 'resolved' } : s,
+                    )
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-emerald-400/10 px-3 py-1.5 text-xs font-medium text-emerald-300 hover:bg-emerald-400/20"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Resolve
+                </button>
+              )}
+              <div className="ml-auto" />
+              <button
+                onClick={() => {
+                  void remove(selected.id)
+                  setSelected(null)
+                }}
+                className="inline-flex items-center gap-1.5 rounded-md border border-severity-critical/30 px-3 py-1.5 text-xs text-severity-critical hover:bg-severity-critical/10"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete
+              </button>
+            </footer>
+          </aside>
         </div>
       )}
+    </div>
+  )
+}
+
+function Field({
+  label,
+  value,
+}: {
+  label: string
+  value: React.ReactNode
+}): React.ReactElement {
+  return (
+    <div>
+      <dt className="text-[10px] uppercase tracking-widest text-ink-500">
+        {label}
+      </dt>
+      <dd className="mt-0.5 text-sm text-white">{value}</dd>
     </div>
   )
 }

@@ -10,9 +10,8 @@ from pathlib import Path
 
 import structlog
 import yaml
-from pydantic import ValidationError
 from prometheus_client import Counter, Gauge
-
+from pydantic import ValidationError
 from schemas.rule import Rule
 
 logger = structlog.get_logger(__name__)

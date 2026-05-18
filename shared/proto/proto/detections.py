@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-
 from schemas.detection import DetectionPayload
 
 STREAM_NAME = "detections.frame"

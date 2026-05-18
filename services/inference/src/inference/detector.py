@@ -13,7 +13,6 @@ import cv2
 import numpy as np
 import structlog
 from prometheus_client import Counter, Histogram
-
 from schemas.detection import BoundingBox, TrackedObject
 
 logger = structlog.get_logger(__name__)
