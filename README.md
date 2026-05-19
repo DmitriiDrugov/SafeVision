@@ -13,7 +13,7 @@ The repo ships **two deployment paths** that share the same UI codebase:
 
 ## Highlights
 
-- 📱 **Pair any phone as a camera** — scan a QR code, the phone streams to the desktop browser via WebRTC P2P (PeerJS broker, no infra to deploy).
+- 📷 **Bring-your-own-camera** — in a plant SafeVision ingests **IP cameras** (RTSP / RTMP) through the ingestion service. For the Vercel demo, **any smartphone camera** works: scan a QR code and the phone streams to the desktop browser via WebRTC P2P (PeerJS broker, no infra to deploy).
 - 🧠 **Browser-side YOLOv8n inference** — `onnxruntime-web` with WASM SIMD / WebGPU, frames processed in a Web Worker so the UI stays at 60 fps.
 - 🗺 **Zone editor + YAML rules** — draw restricted zones on the live tile; rules hot-reload across services.
 - 💬 **LLM rule builder** — describe a hazard in natural language ("alert if more than 3 people gather in the loading bay") and OpenRouter / Llama emits a valid YAML rule.
