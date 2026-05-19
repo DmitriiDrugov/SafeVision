@@ -2,10 +2,12 @@
 
 import type { Detection, WorkerInbound, WorkerOutbound } from "./types";
 
-// Public model + WASM URLs. Both hosted on jsDelivr / Hugging Face CDN —
-// CORS-friendly and well-cached.
-const MODEL_URL =
-  "https://huggingface.co/Xenova/yolov8n/resolve/main/onnx/model.onnx";
+// Model is downloaded into `public/models/` at build time by
+// `scripts/download-model.mjs` so we always fetch it from our own origin.
+// `NEXT_PUBLIC_MODEL_URL` overrides this for testing.
+const MODEL_URL = process.env.NEXT_PUBLIC_MODEL_URL ?? "/models/yolov8n.onnx";
+// onnxruntime-web's WASM/JS shards stay on a CDN — they're tiny and shared
+// across all visitors of the public jsDelivr cache.
 const WASM_BASE = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.0/dist/";
 
 type ProgressHandler = (loaded: number, total: number) => void;
