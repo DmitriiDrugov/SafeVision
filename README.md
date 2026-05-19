@@ -1,6 +1,6 @@
 # SafeVision
 
-Industrial computer-vision safety platform for automotive manufacturing facilities. Detects PPE
+Industrial computer-vision safety platform for manufacturing facilities. Detects PPE
 violations, restricted-zone entries, and dangerous-machinery proximity in real time. All incidents
 surface in the SafeVision web UI — there is no out-of-band WhatsApp / email / webhook channel.
 
