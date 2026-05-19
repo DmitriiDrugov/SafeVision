@@ -1,13 +1,24 @@
 # SafeVision
 
-Industrial computer-vision safety platform for automotive manufacturing facilities. Detects PPE violations, restricted-zone entries, and dangerous-machinery proximity in real time. All incidents surface in the SafeVision web UI — there is no out-of-band WhatsApp / email / webhook channel.
+Industrial computer-vision safety platform for automotive manufacturing facilities. Detects PPE
+violations, restricted-zone entries, and dangerous-machinery proximity in real time. All incidents
+surface in the SafeVision web UI — there is no out-of-band WhatsApp / email / webhook channel.
 
 The repo ships **two deployment paths** that share the same UI codebase:
 
 | Path | Where it runs | Backend | Best for |
 |---|---|---|---|
 | **Demo (Vercel)** | A single Next.js app, frontend-only | YOLOv8n inference runs in the browser via `onnxruntime-web`; pairs phones via WebRTC | Showcasing the product end-to-end without standing up infra |
-| **Full stack (Docker Compose)** | 4 Python microservices + Postgres + Redis + MinIO + Prometheus + Grafana + Loki | Production-style pipeline | Local development, integration tests, and realistic load |
+| **Full stack (Docker Compose / Helm)** | 4 Python microservices + Postgres + Redis + MinIO + Prometheus + Grafana + Loki | Production-style pipeline | Local development, integration tests, and realistic load |
+
+## Highlights
+
+- 📱 **Pair any phone as a camera** — scan a QR code, the phone streams to the desktop browser via WebRTC P2P (PeerJS broker, no infra to deploy).
+- 🧠 **Browser-side YOLOv8n inference** — `onnxruntime-web` with WASM SIMD / WebGPU, frames processed in a Web Worker so the UI stays at 60 fps.
+- 🗺 **Zone editor + YAML rules** — draw restricted zones on the live tile; rules hot-reload across services.
+- 💬 **LLM rule builder** — describe a hazard in natural language ("alert if more than 3 people gather in the loading bay") and OpenRouter / Llama emits a valid YAML rule.
+- 📊 **Observability built in** — Grafana dashboards (Plant Overview, Per-Camera, Incident Funnel), Prometheus alerts, Loki logs, OpenTelemetry traces propagated through Redis Streams.
+- 🔒 **Data sovereignty** — raw video stays on the plant; only incident metadata and short evidence clips leave the host.
 
 ## Live demo flow
 
@@ -49,9 +60,9 @@ NEXT_PUBLIC_DEMO_MODE=true npm run dev
 Open `http://localhost:3000/login`, click **Try the demo**, then:
 
 1. Go to **Cameras** → **Pair camera**.
-2. Scan the QR with your phone (camera app on the same network — but any network works since signaling is via the PeerJS cloud broker).
+2. Scan the QR with your phone (any network works — signaling goes through the PeerJS cloud broker).
 3. Allow camera access on the phone.
-4. The live tile appears on desktop. Open it for full-screen view with detection overlay.
+4. The live tile appears on desktop. Open it for a full-screen view with detection overlay.
 5. Draw zones in the **Zones** editor; rules fire when conditions match and incidents stream to the Dashboard.
 
 ### Deploy to Vercel
@@ -129,7 +140,7 @@ cd safevision
 cp infra/docker-compose/.env.example infra/docker-compose/.env
 # Edit infra/docker-compose/.env — change passwords before running
 
-docker compose -f infra/docker-compose/docker-compose.yml up -d
+docker compose -f infra/docker-compose/docker-compose.yml --env-file infra/docker-compose/.env up -d
 docker compose -f infra/docker-compose/docker-compose.yml ps
 ```
 
@@ -139,17 +150,30 @@ Access points after boot:
 - MinIO Console: http://localhost:9001
 - Prometheus: http://localhost:9090
 
+### Kubernetes (Helm)
+
+A Helm chart lives at `infra/k8s/safevision/` for cluster deployments. See
+[docs/RUNBOOK.md](docs/RUNBOOK.md) for upgrade and rollback procedures.
+
 ## Repository layout
 
 ```
 services/          # Four Python microservices (ingestion, inference, rule-engine, incident)
 web/app/           # Next.js 15 dashboard, demo mode, browser inference, WebRTC pairing
+  └─ vercel.json   # Vercel deployment config (frontend-only demo mode)
 shared/            # Pydantic schemas and Redis Stream proto models (imported by all Python services)
 infra/             # docker-compose stack, Helm chart, Grafana dashboards, Prometheus rules
+scripts/           # Dev helpers — model download, migrations, RTSP test stream, setup-dev
 tests/             # unit, integration, e2e, load, llm-eval test suites
 docs/              # ARCHITECTURE.md, RUNBOOK.md, RULE-AUTHORING.md
-vercel.json        # Vercel deployment config (demo mode)
 ```
+
+## Standards
+
+- **Python 3.11**, Pydantic v2 everywhere; `ruff` (line length 100) + `mypy --strict` on `shared/`.
+- **TypeScript** strict mode, no `any`; `eslint` with `@typescript-eslint/recommended-strict`.
+- **Commits** use Conventional Commit prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`.
+- **Logging** via `structlog` — no `print()` statements.
 
 ## Development milestones
 
