@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { nanoid } from "nanoid";
+import { customAlphabet, nanoid } from "nanoid";
 import type { Zone } from "@/lib/api";
 
 export type CameraStatus = "pairing" | "live" | "offline";
@@ -19,6 +19,27 @@ export interface DemoCamera {
   lastSeenAt: string | null;
   /** Optional cached thumbnail data URL — small JPEG of the latest frame. */
   thumbnail: string | null;
+}
+
+/**
+ * PeerJS rejects IDs that don't match
+ * `/^[A-Za-z0-9]+(?:[ _-][A-Za-z0-9]+)*$/` — consecutive separators
+ * (`--`, `__`, ` -`, ...) are invalid. nanoid's default alphabet
+ * includes `-` and `_`, which makes consecutive separators possible.
+ * Use an alphanumeric-only alphabet so the ID is *always* valid.
+ */
+const PEER_ALPHABET =
+  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const peerNanoid = customAlphabet(PEER_ALPHABET, 12);
+
+const PEER_ID_RE = /^[A-Za-z0-9]+(?:[ _-][A-Za-z0-9]+)*$/;
+
+export function generatePeerId(): string {
+  return `sv${peerNanoid()}`;
+}
+
+export function isPeerIdValid(id: string): boolean {
+  return typeof id === "string" && id.length > 0 && PEER_ID_RE.test(id);
 }
 
 interface CamerasState {
@@ -38,10 +59,12 @@ export const useCamerasStore = create<CamerasState>()(
     (set) => ({
       cameras: [],
       add: ({ name, peerId }) => {
+        const safePeerId =
+          peerId && isPeerIdValid(peerId) ? peerId : generatePeerId();
         const cam: DemoCamera = {
           id: nanoid(8),
           name: name.trim() || "Camera",
-          peerId: peerId ?? `sv-${nanoid(10)}`,
+          peerId: safePeerId,
           status: "pairing",
           enabled: true,
           zones: [],
@@ -85,11 +108,35 @@ export const useCamerasStore = create<CamerasState>()(
     }),
     {
       name: "sv:cameras",
+      // Bump when changing how cameras are stored so old browsers re-migrate.
+      version: 2,
       storage: createJSONStorage(() => localStorage),
       // Thumbnails can balloon localStorage — exclude them from persistence.
       partialize: (s) => ({
         cameras: s.cameras.map((c) => ({ ...c, thumbnail: null })),
       }),
+      migrate: (persistedState, version) => {
+        // v1 → v2: nanoid's default alphabet can produce PeerJS-invalid IDs
+        // (e.g. `sv-7i-uS--Pkk`). Regenerate any cached peerIds that fail
+        // validation and force their cameras back to `offline` so the
+        // operator re-pairs the phone.
+        const state = (persistedState ?? {}) as Partial<CamerasState>;
+        const cameras = Array.isArray(state.cameras) ? state.cameras : [];
+        if (version < 2) {
+          return {
+            cameras: cameras.map((c) =>
+              isPeerIdValid(c.peerId)
+                ? c
+                : {
+                    ...c,
+                    peerId: generatePeerId(),
+                    status: "offline" as CameraStatus,
+                  },
+            ),
+          };
+        }
+        return state;
+      },
     },
   ),
 );

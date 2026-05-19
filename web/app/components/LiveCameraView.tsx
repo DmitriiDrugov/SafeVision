@@ -11,6 +11,7 @@ import {
   VideoOff,
 } from "lucide-react";
 import cn from "clsx";
+import { useShallow } from "zustand/react/shallow";
 import {
   createInferenceClient,
   type InferenceClient,
@@ -50,8 +51,14 @@ export default function LiveCameraView({ camera }: Props): React.ReactElement {
 
   const setStatus = useCamerasStore((s) => s.setStatus);
   const setThumbnail = useCamerasStore((s) => s.setThumbnail);
-  const recentIncidents = useIncidentsStore((s) =>
-    s.incidents.filter((i) => i.camera_id === camera.id).slice(0, 8),
+  // `useShallow` is required here — Zustand v5's snapshot equality is strict
+  // (Object.is). A selector that returns a fresh array on every call (e.g.
+  // `.filter().slice()`) triggers React's "Maximum update depth exceeded"
+  // because useSyncExternalStore re-renders on every snapshot mismatch.
+  const recentIncidents = useIncidentsStore(
+    useShallow((s) =>
+      s.incidents.filter((i) => i.camera_id === camera.id).slice(0, 8),
+    ),
   );
   const rules = useRulesStore((s) => s.rules);
 
