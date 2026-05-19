@@ -6,9 +6,12 @@ import type { Detection, WorkerInbound, WorkerOutbound } from "./types";
 // `scripts/download-model.mjs` so we always fetch it from our own origin.
 // `NEXT_PUBLIC_MODEL_URL` overrides this for testing.
 const MODEL_URL = process.env.NEXT_PUBLIC_MODEL_URL ?? "/models/yolov8n.onnx";
-// onnxruntime-web's WASM/JS shards stay on a CDN — they're tiny and shared
-// across all visitors of the public jsDelivr cache.
-const WASM_BASE = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.0/dist/";
+// onnxruntime-web's WASM shards stay on a CDN — they're tiny and shared across
+// all visitors of the public jsDelivr cache. The version is injected by
+// next.config.ts from the installed npm package so the WASM ABI always matches
+// the JS glue Webpack bundled into the worker.
+const ORT_VERSION = process.env.NEXT_PUBLIC_ORT_VERSION ?? "1.20.0";
+const WASM_BASE = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${ORT_VERSION}/dist/`;
 
 type ProgressHandler = (loaded: number, total: number) => void;
 type ReadyHandler = (info: { inputSize: number; backend: string }) => void;
