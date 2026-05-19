@@ -10,8 +10,11 @@ import {
   type MediaConnection,
   type PeerType,
 } from "@/lib/webrtc/peer";
-import { useCamerasStore, type DemoCamera } from "@/lib/stores/cameras";
-import { nanoid } from "nanoid";
+import {
+  generatePeerId,
+  useCamerasStore,
+  type DemoCamera,
+} from "@/lib/stores/cameras";
 
 interface Props {
   open: boolean;
@@ -72,7 +75,7 @@ export default function PairCameraModal({
   const startPairing = async (): Promise<void> => {
     setError(null);
     const trimmed = name.trim() || `Camera ${new Date().toLocaleTimeString()}`;
-    const id = `sv-${nanoid(10)}`;
+    const id = generatePeerId();
     setPeerId(id);
     setPhase("awaiting");
 
