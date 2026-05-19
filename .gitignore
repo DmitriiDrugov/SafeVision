@@ -69,3 +69,6 @@ yarn-error.log*
 test-results/
 playwright-report/
 *.tsbuildinfo
+
+# ML model weights — fetched at build time by web/app/scripts/download-model.mjs
+web/app/public/models/*.onnx
